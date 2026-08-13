@@ -6561,7 +6561,7 @@ APPLICATION FAILED TO START
 
 Description:
 
-Parameter 0 of constructor in com.kien.quanlynhahang.auth.AuthController required a bean of type 'org.springframework.security.authentication.AuthenticationManager' that could not be found.
+Parameter 0 of constructor in com.kien.quanlynhahang.auth.controller.AuthController required a bean of type 'org.springframework.security.authentication.AuthenticationManager' that could not be found.
 
 
 Action:

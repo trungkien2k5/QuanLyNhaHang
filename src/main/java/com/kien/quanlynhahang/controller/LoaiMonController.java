@@ -1,27 +1,70 @@
 package com.kien.quanlynhahang.controller;
 
 import com.kien.quanlynhahang.common.ApiResponse;
+import com.kien.quanlynhahang.dto.request.CreateLoaiMonRequest;
+import com.kien.quanlynhahang.dto.request.UpdateLoaiMonRequest;
 import com.kien.quanlynhahang.entity.LoaiMon;
-import com.kien.quanlynhahang.repository.LoaiMonRepository;
+import com.kien.quanlynhahang.service.LoaiMonService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("/loaimon")
+@RequiredArgsConstructor
 public class LoaiMonController {
 
-    private final LoaiMonRepository loaiMonRepository;
+    private final LoaiMonService loaiMonService;
+
+    @Operation(summary = "Thêm loại món")
+    @PostMapping
+    public ApiResponse<LoaiMon> them(@Valid @RequestBody CreateLoaiMonRequest request) {
+
+        LoaiMon loaiMon = loaiMonService.them(request);
+
+        return ApiResponse.<LoaiMon>builder()
+                .success(true)
+                .message("Thêm loại món thành công")
+                .data(loaiMon)
+                .build();
+    }
+
+    @Operation(summary = "Cập nhật loại món")
+    @PutMapping("/{id}")
+    public ApiResponse<LoaiMon> sua(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateLoaiMonRequest request) {
+
+        LoaiMon loaiMon = loaiMonService.sua(id, request);
+
+        return ApiResponse.<LoaiMon>builder()
+                .success(true)
+                .message("Cập nhật loại món thành công")
+                .data(loaiMon)
+                .build();
+    }
+
+    @Operation(summary = "Xóa loại món")
+    @DeleteMapping("/{id}")
+    public ApiResponse<String> xoa(@PathVariable Integer id) {
+
+        loaiMonService.xoa(id);
+
+        return ApiResponse.<String>builder()
+                .success(true)
+                .message("Xóa loại món thành công")
+                .data(null)
+                .build();
+    }
 
     @Operation(summary = "Lấy danh sách loại món")
     @GetMapping
     public ApiResponse<List<LoaiMon>> layTatCa() {
-        List<LoaiMon> loaiMons = loaiMonRepository.findAll();
+
+        List<LoaiMon> loaiMons = loaiMonService.layTatCa();
 
         return ApiResponse.<List<LoaiMon>>builder()
                 .success(true)

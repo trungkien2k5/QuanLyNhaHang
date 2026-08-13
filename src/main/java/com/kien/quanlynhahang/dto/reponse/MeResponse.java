@@ -10,7 +10,7 @@ public class MeResponse {
     @Schema(description = "Lấy thông tin người dùng đăng nhập")
     private Integer maND;
     private String tenDangNhap;
+    private String hoTen;
     private String email;
     private String vaiTro;
-
 }

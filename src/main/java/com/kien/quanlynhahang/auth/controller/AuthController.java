@@ -1,17 +1,22 @@
-package com.kien.quanlynhahang.auth;
+package com.kien.quanlynhahang.auth.controller;
 
+import com.kien.quanlynhahang.auth.service.AuthService;
 import com.kien.quanlynhahang.dto.reponse.MeResponse;
 import com.kien.quanlynhahang.dto.reponse.RefreshTokenResponse;
 import com.kien.quanlynhahang.dto.request.*;
 import com.kien.quanlynhahang.entity.NguoiDung;
 import com.kien.quanlynhahang.repository.NguoiDungRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import com.kien.quanlynhahang.common.ApiResponse;
 import com.kien.quanlynhahang.dto.reponse.LoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +41,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<MeResponse> me(Authentication authentication){
+    public ApiResponse<MeResponse> me(Authentication authentication) {
 
         NguoiDung nguoiDung = nguoiDungRepository
                 .findByTenDangNhap(authentication.getName())
@@ -45,27 +50,24 @@ public class AuthController {
         return ApiResponse.<MeResponse>builder()
                 .success(true)
                 .message("Lấy thông tin thành công")
-                .data(new MeResponse(
-                        nguoiDung.getMaND(),
-                        nguoiDung.getTenDangNhap(),
-                        nguoiDung.getEmail(),
-                        nguoiDung.getVaiTro()))
+                .data(authService.me(authentication.getName()))
                 .build();
+
     }
 
     @PutMapping("/change-password")
     public ApiResponse<String> changePassword(
             Authentication authentication,
-            @RequestBody ChangePasswordRequest request){
+            @RequestBody ChangePasswordRequest request) {
 
         NguoiDung nguoiDung =
                 nguoiDungRepository
                         .findByTenDangNhap(authentication.getName())
                         .orElseThrow();
 
-        if(!passwordEncoder.matches(
+        if (!passwordEncoder.matches(
                 request.getOldPassword(),
-                nguoiDung.getMatKhau())){
+                nguoiDung.getMatKhau())) {
 
             throw new RuntimeException("Mật khẩu cũ không đúng");
         }
@@ -81,17 +83,19 @@ public class AuthController {
                 .data("OK")
                 .build();
     }
-@Operation(summary = "Làm mới Access Token")
-@PostMapping("/refresh")
-public ApiResponse<RefreshTokenResponse> refresh(
-        @RequestBody RefreshTokenRequest request) {
 
-    return ApiResponse.<RefreshTokenResponse>builder()
-            .success(true)
-            .message("Làm mới token thành công")
-            .data(authService.refreshToken(request))
-            .build();
-}
+    @Operation(summary = "Làm mới Access Token")
+    @PostMapping("/refresh")
+    public ApiResponse<RefreshTokenResponse> refresh(
+            @RequestBody RefreshTokenRequest request) {
+
+        return ApiResponse.<RefreshTokenResponse>builder()
+                .success(true)
+                .message("Làm mới token thành công")
+                .data(authService.refreshToken(request))
+                .build();
+    }
+
     @Operation(summary = "Đăng xuất")
     @PostMapping("/logout")
     public ApiResponse<String> logout(
@@ -105,9 +109,10 @@ public ApiResponse<RefreshTokenResponse> refresh(
                 .data("OK")
                 .build();
     }
+
     @PostMapping("/forgot-password")
     public ApiResponse<String> forgotPassword(
-            @RequestBody ForgotPasswordRequest request){
+            @RequestBody ForgotPasswordRequest request) {
 
         authService.forgotPassword(request);
 
@@ -117,9 +122,10 @@ public ApiResponse<RefreshTokenResponse> refresh(
                 .data("OK")
                 .build();
     }
+
     @PostMapping("/reset-password")
     public ApiResponse<String> resetPassword(
-            @RequestBody ResetPasswordRequest request){
+            @RequestBody ResetPasswordRequest request) {
 
         authService.resetPassword(request);
 
@@ -128,5 +134,38 @@ public ApiResponse<RefreshTokenResponse> refresh(
                 .message("Đổi mật khẩu thành công")
                 .data("OK")
                 .build();
+    }
+
+    @Operation(summary = "Đăng ký tài khoản")
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<Void>> register(
+            @Valid @RequestBody RegisterRequest request) {
+
+        authService.register(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.<Void>builder()
+                        .success(true)
+                        .status(HttpStatus.CREATED.value())
+                        .message("Đăng ký thành công")
+                        .data(null)
+                        .build());
+    }
+
+    @Operation(summary = "Cập nhật thông tin cá nhân")
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<Void>> updateProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UpdateProfileRequest request) {
+
+        authService.updateProfile(userDetails.getUsername(), request);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .status(HttpStatus.OK.value())
+                        .message("Cập nhật thông tin thành công")
+                        .data(null)
+                        .build());
     }
 }

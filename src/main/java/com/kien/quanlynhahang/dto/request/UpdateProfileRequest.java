@@ -6,11 +6,18 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class ForgotPasswordRequest {
+public class UpdateProfileRequest {
 
     @Schema(
-            description = "Email tài khoản",
-            example = "admin@gmail.com"
+            description = "Họ và tên",
+            example = "Nguyễn Văn A"
+    )
+    @NotBlank(message = "Họ và tên không được để trống")
+    private String hoTen;
+
+    @Schema(
+            description = "Email",
+            example = "nguyenvana@gmail.com"
     )
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không đúng định dạng")
