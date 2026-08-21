@@ -1,6 +1,6 @@
 package com.kien.restaurant.entity;
 
-import com.kien.restaurant.entity.LoaiMon;
+import com.kien.quanlynhahang.entity.LoaiMon;
 import jakarta.persistence.*;
 import lombok.Data;
 

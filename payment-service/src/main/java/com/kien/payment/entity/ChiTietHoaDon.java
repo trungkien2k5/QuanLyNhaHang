@@ -19,7 +19,7 @@ public class ChiTietHoaDon {
     @JoinColumn(name = "MaHD")
     private HoaDon hoaDon;
 
-    @Column(name = "MaMon")
+    @Column(name = "MaMon", insertable = false, updatable = false)
     private Integer maMon;
 
     private Integer soLuong;
