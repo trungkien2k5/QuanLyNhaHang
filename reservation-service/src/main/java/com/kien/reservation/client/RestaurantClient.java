@@ -12,11 +12,11 @@ public class RestaurantClient {
 
     private final RestClient restClient;
 
-    public RestaurantClient() {
-    this.restClient = RestClient.builder()
-            .baseUrl("http://localhost:8082")
-            .build();
-}
+    public RestaurantClient(RestClient.Builder builder) {
+        this.restClient = builder
+                .baseUrl("http://localhost:8082")
+                .build();
+    }
 
     public List<Integer> layMaBanTheoKhuVuc(Integer maKhuVuc) {
         ApiResponse<List<Integer>> response = restClient.get()

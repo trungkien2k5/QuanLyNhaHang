@@ -26,10 +26,14 @@ public class DatBanSpecification {
             Subquery<Integer> subquery = query.subquery(Integer.class);
             Root<ChiTietDatBan> chiTiet = subquery.from(ChiTietDatBan.class);
 
-            subquery.select(chiTiet.get("datBan").get("maDatBan"))
-                    .where(cb.equal(
+            subquery.select(
+                    chiTiet.get("id").get("maDatBan")
+            ).where(
+                    cb.equal(
                             chiTiet.get("id").get("maBan"),
-                            maBan));
+                            maBan
+                    )
+            );
 
             return root.get("maDatBan").in(subquery);
         };
@@ -44,8 +48,11 @@ public class DatBanSpecification {
             Subquery<Integer> subquery = query.subquery(Integer.class);
             Root<ChiTietDatBan> chiTiet = subquery.from(ChiTietDatBan.class);
 
-            subquery.select(chiTiet.get("datBan").get("maDatBan"))
-                    .where(chiTiet.get("id").get("maBan").in(maBans));
+            subquery.select(
+                    chiTiet.get("id").get("maDatBan")
+            ).where(
+                    chiTiet.get("id").get("maBan").in(maBans)
+            );
 
             return root.get("maDatBan").in(subquery);
         };
@@ -57,7 +64,10 @@ public class DatBanSpecification {
                 return null;
             }
 
-            return cb.equal(root.get("trangThai"), trangThai);
+            return cb.equal(
+                    root.get("trangThai"),
+                    trangThai
+            );
         };
     }
 
