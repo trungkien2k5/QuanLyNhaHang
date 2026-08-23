@@ -15,8 +15,8 @@ services:
       - discovery-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1433;databaseName=restaurant_auth;encrypt=true;trustServerCertificate=true
-      SPRING_DATASOURCE_USERNAME: sa
-      SPRING_DATASOURCE_PASSWORD: 123456
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
 
@@ -29,8 +29,8 @@ services:
       - discovery-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1433;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true
-      SPRING_DATASOURCE_USERNAME: sa
-      SPRING_DATASOURCE_PASSWORD: 123456
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
 
@@ -43,8 +43,8 @@ services:
       - discovery-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1433;databaseName=restaurant_reservation;encrypt=true;trustServerCertificate=true
-      SPRING_DATASOURCE_USERNAME: sa
-      SPRING_DATASOURCE_PASSWORD: 123456
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
 
@@ -58,8 +58,8 @@ services:
       - restaurant-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1433;databaseName=restaurant_payment;encrypt=true;trustServerCertificate=true
-      SPRING_DATASOURCE_USERNAME: sa
-      SPRING_DATASOURCE_PASSWORD: 123456
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
 
@@ -80,3 +80,4 @@ services:
 networks:
   default:
     name: quanlynhahang-network
+
