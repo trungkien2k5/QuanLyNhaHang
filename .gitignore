@@ -34,3 +34,5 @@ build/
 # Environment / Secrets
 .env
 *.log
+
+*.log
