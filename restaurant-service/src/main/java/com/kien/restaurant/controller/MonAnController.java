@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,27 +23,19 @@ public class MonAnController {
     private final MonAnService monAnService;
 
     @Operation(summary = "Lấy danh sách món ăn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'CUSTOMER')")
     @GetMapping
     public ApiResponse<Page<MonAn>> layTat(
 
             @RequestParam(defaultValue = "0") int page,
-
             @RequestParam(defaultValue = "10") int size,
-
             @RequestParam(required = false) String keyword,
-
             @RequestParam(required = false) String tenMon,
-
             @RequestParam(required = false) Integer maLoai,
-
             @RequestParam(required = false) BigDecimal giaTu,
-
             @RequestParam(required = false) BigDecimal giaDen,
-
             @RequestParam(required = false) String trangThai,
-
             @RequestParam(defaultValue = "maMon") String sort,
-
             @RequestParam(defaultValue = "asc") String direction) {
 
         String tenMonLoc = tenMon != null ? tenMon : keyword;
@@ -64,9 +57,12 @@ public class MonAnController {
                 .data(monAns)
                 .build();
     }
+
     @Operation(summary = "Lấy món ăn theo mã")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'CUSTOMER')")
     @GetMapping("/{id}")
-    public ApiResponse<MonAn> layTheoMa(@PathVariable Integer id) {
+    public ApiResponse<MonAn> layTheoMa(
+            @PathVariable Integer id) {
 
         MonAn monAn = monAnService.layTheoMa(id);
 
@@ -78,6 +74,7 @@ public class MonAnController {
     }
 
     @Operation(summary = "Thêm món ăn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<MonAn> themMon(
             @Valid @RequestPart("monAn") MonAnDTO dto,
@@ -93,7 +90,10 @@ public class MonAnController {
     }
 
     @Operation(summary = "Cập nhật món ăn")
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PutMapping(
+            value = "/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<MonAn> capNhat(
             @PathVariable Integer id,
             @Valid @RequestPart("monAn") MonAnDTO dto,
@@ -109,8 +109,10 @@ public class MonAnController {
     }
 
     @Operation(summary = "Xóa món ăn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> xoa(@PathVariable Integer id){
+    public ApiResponse<Void> xoa(
+            @PathVariable Integer id) {
 
         monAnService.xoa(id);
 

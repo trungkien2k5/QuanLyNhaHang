@@ -8,6 +8,7 @@ import com.kien.restaurant.service.LoaiMonService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +21,10 @@ public class LoaiMonController {
     private final LoaiMonService loaiMonService;
 
     @Operation(summary = "Thêm loại món")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
-    public ApiResponse<LoaiMon> them(@Valid @RequestBody CreateLoaiMonRequest request) {
+    public ApiResponse<LoaiMon> them(
+            @Valid @RequestBody CreateLoaiMonRequest request) {
 
         LoaiMon loaiMon = loaiMonService.them(request);
 
@@ -33,6 +36,7 @@ public class LoaiMonController {
     }
 
     @Operation(summary = "Cập nhật loại món")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PutMapping("/{id}")
     public ApiResponse<LoaiMon> sua(
             @PathVariable Integer id,
@@ -48,8 +52,10 @@ public class LoaiMonController {
     }
 
     @Operation(summary = "Xóa loại món")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @DeleteMapping("/{id}")
-    public ApiResponse<String> xoa(@PathVariable Integer id) {
+    public ApiResponse<String> xoa(
+            @PathVariable Integer id) {
 
         loaiMonService.xoa(id);
 
@@ -61,6 +67,7 @@ public class LoaiMonController {
     }
 
     @Operation(summary = "Lấy danh sách loại món")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @GetMapping
     public ApiResponse<List<LoaiMon>> layTatCa() {
 

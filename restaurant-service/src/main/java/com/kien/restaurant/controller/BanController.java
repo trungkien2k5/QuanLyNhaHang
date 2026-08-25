@@ -11,6 +11,7 @@ import com.kien.restaurant.entity.Ban;
 import com.kien.restaurant.repository.BanRepository;
 import com.kien.restaurant.service.BanService;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,12 +20,15 @@ import java.util.List;
 @RestController
 @RequestMapping("/ban")
 public class BanController {
+
     private final BanRepository banRepository;
     private final BanService banService;
 
     @Operation(summary = "Lấy danh sách bàn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @GetMapping
-    public ApiResponse<List<Ban>> laytatca(){
+    public ApiResponse<List<Ban>> laytatca() {
+
         List<Ban> bans = banRepository.findAll();
 
         return ApiResponse.<List<Ban>>builder()
@@ -33,24 +37,32 @@ public class BanController {
                 .data(bans)
                 .build();
     }
-   @GetMapping("/khuvuc/{maKhuVuc}")
-public ApiResponse<List<Integer>> layTheoKhuVuc(
-        @PathVariable Integer maKhuVuc) {
 
-    List<Integer> maBans = banRepository.findByKhuVuc_MaKhuVuc(maKhuVuc)
-            .stream()
-            .map(Ban::getMaBan)
-            .toList();
+    @Operation(summary = "Lấy mã bàn theo khu vực")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
+    @GetMapping("/khuvuc/{maKhuVuc}")
+    public ApiResponse<List<Integer>> layTheoKhuVuc(
+            @PathVariable Integer maKhuVuc) {
 
-    return ApiResponse.<List<Integer>>builder()
-            .success(true)
-            .message("Lấy mã bàn theo khu vực thành công")
-            .data(maBans)
-            .build();
-}
+        List<Integer> maBans = banRepository
+                .findByKhuVuc_MaKhuVuc(maKhuVuc)
+                .stream()
+                .map(Ban::getMaBan)
+                .toList();
+
+        return ApiResponse.<List<Integer>>builder()
+                .success(true)
+                .message("Lấy mã bàn theo khu vực thành công")
+                .data(maBans)
+                .build();
+    }
+
     @Operation(summary = "Thêm bàn mới")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
-    public ApiResponse<Ban> themban(@RequestBody BanDTO dto){
+    public ApiResponse<Ban> themban(
+            @RequestBody BanDTO dto) {
+
         Ban ban = banService.themban(dto);
 
         return ApiResponse.<Ban>builder()
@@ -61,6 +73,7 @@ public ApiResponse<List<Integer>> layTheoKhuVuc(
     }
 
     @Operation(summary = "Lấy danh sách bàn theo trạng thái")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @GetMapping("/trangthai")
     public ApiResponse<List<Ban>> layTheoTrangThai(
             @RequestParam TrangThaiBan status) {
@@ -75,20 +88,26 @@ public ApiResponse<List<Integer>> layTheoKhuVuc(
     }
 
     @Operation(summary = "Tìm bàn theo sức chứa")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @GetMapping("/ducho/{songuoi}")
-    public ApiResponse<List<Ban>> timbanducho (@PathVariable Integer songuoi){
+    public ApiResponse<List<Ban>> timbanducho(
+            @PathVariable Integer songuoi) {
+
         List<Ban> bans = banService.timbanducho(songuoi);
 
         return ApiResponse.<List<Ban>>builder()
                 .success(true)
-                .message("Tìm bàn theo sức chứa thành công")
+                .message("Tìm bàn đủ chỗ thành công")
                 .data(bans)
                 .build();
     }
 
     @Operation(summary = "Tìm bàn trống đủ chỗ")
-    @GetMapping("timban")
-    public ApiResponse<List<Ban>> timban (@RequestParam Integer songuoi){
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'CUSTOMER')")
+    @GetMapping("/timban")
+    public ApiResponse<List<Ban>> timban(
+            @RequestParam Integer songuoi) {
+
         List<Ban> bans = banService.timbantrongducho(songuoi);
 
         return ApiResponse.<List<Ban>>builder()
@@ -97,13 +116,18 @@ public ApiResponse<List<Integer>> layTheoKhuVuc(
                 .data(bans)
                 .build();
     }
-    @PutMapping("/{id}/status")
+
     @Operation(summary = "Cập nhật trạng thái bàn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
+    @PutMapping("/{id}/status")
     public ApiResponse<BanDTO> capNhatTrangThai(
             @PathVariable Integer id,
             @Valid @RequestBody CapNhatTrangThaiBanDTO request) {
 
-        BanDTO banDTO = banService.capNhatTrangThai(id, request.getStatus());
+        BanDTO banDTO = banService.capNhatTrangThai(
+                id,
+                request.getStatus()
+        );
 
         return ApiResponse.<BanDTO>builder()
                 .message("Cập nhật trạng thái bàn thành công")

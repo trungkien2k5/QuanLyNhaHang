@@ -9,12 +9,12 @@ import com.kien.auth.repository.NguoiDungRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import com.kien.auth.common.ApiResponse;
 import com.kien.auth.dto.reponse.LoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
     private final AuthService authService;
     private final NguoiDungRepository nguoiDungRepository;
     private final PasswordEncoder passwordEncoder;
@@ -40,21 +41,26 @@ public class AuthController {
                 .build();
     }
 
+    @Operation(summary = "Lấy thông tin người dùng hiện tại")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
-    public ApiResponse<MeResponse> me(Authentication authentication) {
+    public ApiResponse<MeResponse> me(
+            Authentication authentication) {
 
-        NguoiDung nguoiDung = nguoiDungRepository
-                .findByTenDangNhap(authentication.getName())
-                .orElseThrow();
+        NguoiDung nguoiDung =
+                nguoiDungRepository
+                        .findByTenDangNhap(authentication.getName())
+                        .orElseThrow();
 
         return ApiResponse.<MeResponse>builder()
                 .success(true)
                 .message("Lấy thông tin thành công")
                 .data(authService.me(authentication.getName()))
                 .build();
-
     }
 
+    @Operation(summary = "Đổi mật khẩu")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/change-password")
     public ApiResponse<String> changePassword(
             Authentication authentication,
@@ -97,6 +103,7 @@ public class AuthController {
     }
 
     @Operation(summary = "Đăng xuất")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout")
     public ApiResponse<String> logout(
             @RequestBody RefreshTokenRequest request) {
@@ -110,6 +117,7 @@ public class AuthController {
                 .build();
     }
 
+    @Operation(summary = "Quên mật khẩu")
     @PostMapping("/forgot-password")
     public ApiResponse<String> forgotPassword(
             @RequestBody ForgotPasswordRequest request) {
@@ -123,6 +131,7 @@ public class AuthController {
                 .build();
     }
 
+    @Operation(summary = "Đặt lại mật khẩu")
     @PostMapping("/reset-password")
     public ApiResponse<String> resetPassword(
             @RequestBody ResetPasswordRequest request) {
@@ -153,12 +162,16 @@ public class AuthController {
     }
 
     @Operation(summary = "Cập nhật thông tin cá nhân")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<Void>> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UpdateProfileRequest request) {
 
-        authService.updateProfile(userDetails.getUsername(), request);
+        authService.updateProfile(
+                userDetails.getUsername(),
+                request
+        );
 
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
@@ -166,6 +179,7 @@ public class AuthController {
                         .status(HttpStatus.OK.value())
                         .message("Cập nhật thông tin thành công")
                         .data(null)
-                        .build());
+                        .build()
+        );
     }
 }

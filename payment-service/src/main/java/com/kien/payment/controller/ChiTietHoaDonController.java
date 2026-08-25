@@ -8,6 +8,7 @@ import com.kien.payment.dto.ThemMonDTO;
 import com.kien.payment.entity.ChiTietHoaDon;
 import com.kien.payment.service.ChiTietHoaDonService;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,12 +17,18 @@ import java.util.List;
 @RestController
 @RequestMapping("/chitiethoadon")
 public class ChiTietHoaDonController {
+
     private final ChiTietHoaDonService chiTietHoaDonService;
 
     @Operation(summary = "Thêm món vào hóa đơn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @PostMapping("/{maHD}/them-mon")
-    public ApiResponse<ChiTietHoaDon> themMon(@PathVariable Integer maHD, @RequestBody ThemMonDTO dto) {
-        ChiTietHoaDon chiTietHoaDon = chiTietHoaDonService.themMon(maHD, dto);
+    public ApiResponse<ChiTietHoaDon> themMon(
+            @PathVariable Integer maHD,
+            @RequestBody ThemMonDTO dto) {
+
+        ChiTietHoaDon chiTietHoaDon =
+                chiTietHoaDonService.themMon(maHD, dto);
 
         return ApiResponse.<ChiTietHoaDon>builder()
                 .success(true)
@@ -31,8 +38,12 @@ public class ChiTietHoaDonController {
     }
 
     @Operation(summary = "Xóa món khỏi hóa đơn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @DeleteMapping("/{maHD}/{maMon}")
-    public ApiResponse<Void> xoaMon(@PathVariable Integer maHD, @PathVariable Integer maMon) {
+    public ApiResponse<Void> xoaMon(
+            @PathVariable Integer maHD,
+            @PathVariable Integer maMon) {
+
         chiTietHoaDonService.xoaMon(maHD, maMon);
 
         return ApiResponse.<Void>builder()
@@ -42,9 +53,15 @@ public class ChiTietHoaDonController {
     }
 
     @Operation(summary = "Cập nhật số lượng món trong hóa đơn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @PutMapping("/{maHD}/{maMon}")
-    public ApiResponse<ChiTietHoaDon> capNhatSoLuong(@PathVariable Integer maHD, @PathVariable Integer maMon, @RequestBody CapNhatSoLuongDTO dto) {
-        ChiTietHoaDon chiTietHoaDon = chiTietHoaDonService.capNhatSoLuong(maHD, maMon, dto);
+    public ApiResponse<ChiTietHoaDon> capNhatSoLuong(
+            @PathVariable Integer maHD,
+            @PathVariable Integer maMon,
+            @RequestBody CapNhatSoLuongDTO dto) {
+
+        ChiTietHoaDon chiTietHoaDon =
+                chiTietHoaDonService.capNhatSoLuong(maHD, maMon, dto);
 
         return ApiResponse.<ChiTietHoaDon>builder()
                 .success(true)
@@ -54,9 +71,13 @@ public class ChiTietHoaDonController {
     }
 
     @Operation(summary = "Lấy chi tiết theo hóa đơn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @GetMapping("/hoadon/{maHD}")
-    public ApiResponse<List<ChiTietHoaDon>> layTheoHoaDon(@PathVariable Integer maHD) {
-        List<ChiTietHoaDon> chiTietHoaDons = chiTietHoaDonService.layTheoHoaDon(maHD);
+    public ApiResponse<List<ChiTietHoaDon>> layTheoHoaDon(
+            @PathVariable Integer maHD) {
+
+        List<ChiTietHoaDon> chiTietHoaDons =
+                chiTietHoaDonService.layTheoHoaDon(maHD);
 
         return ApiResponse.<List<ChiTietHoaDon>>builder()
                 .success(true)
@@ -64,5 +85,4 @@ public class ChiTietHoaDonController {
                 .data(chiTietHoaDons)
                 .build();
     }
-
 }

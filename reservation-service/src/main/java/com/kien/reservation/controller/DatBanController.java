@@ -9,6 +9,7 @@ import com.kien.reservation.service.DatBanService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -17,11 +18,15 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/datban")
 public class DatBanController {
+
     private final DatBanService datBanService;
 
     @Operation(summary = "Tạo đặt bàn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @PostMapping
-    public ApiResponse<DatBan> them(@RequestBody DatBanDTO dto){
+    public ApiResponse<DatBan> them(
+            @RequestBody DatBanDTO dto) {
+
         DatBan datBan = datBanService.them(dto);
 
         return ApiResponse.<DatBan>builder()
@@ -32,6 +37,7 @@ public class DatBanController {
     }
 
     @Operation(summary = "Lấy danh sách đặt bàn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF')")
     @GetMapping
     public ApiResponse<Page<DatBan>> laytat(
             @RequestParam(defaultValue = "0") int page,
@@ -60,16 +66,26 @@ public class DatBanController {
                 .data(datBans)
                 .build();
     }
+
+    @Operation(summary = "Lấy chi tiết đặt bàn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'STAFF', 'CUSTOMER')")
     @GetMapping("/{id}")
-    public ApiResponse<DatBan> layChiTiet(@PathVariable Integer id) {
+    public ApiResponse<DatBan> layChiTiet(
+            @PathVariable Integer id) {
+
         return ApiResponse.<DatBan>builder()
                 .success(true)
                 .message("Lấy chi tiết đặt bàn thành công")
                 .data(datBanService.layChiTiet(id))
                 .build();
     }
+
+    @Operation(summary = "Hủy đặt bàn")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CUSTOMER')")
     @PutMapping("/{id}/cancel")
-    public ApiResponse<DatBan> huyDatBan(@PathVariable Integer id) {
+    public ApiResponse<DatBan> huyDatBan(
+            @PathVariable Integer id) {
+
         return ApiResponse.<DatBan>builder()
                 .success(true)
                 .message("Hủy đặt bàn thành công")

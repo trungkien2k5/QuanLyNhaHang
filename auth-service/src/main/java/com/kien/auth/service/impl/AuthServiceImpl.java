@@ -220,12 +220,7 @@ public class AuthServiceImpl implements AuthService {
                 passwordEncoder.encode(request.getMatKhau())
         );
 
-        // Nếu client không truyền vai trò thì mặc định USER
-        if (request.getVaiTro() == null || request.getVaiTro().isBlank()) {
-            nguoiDung.setVaiTro("USER");
-        } else {
-            nguoiDung.setVaiTro(request.getVaiTro().toUpperCase());
-        }
+        nguoiDung.setVaiTro("CUSTOMER");
 
         nguoiDungRepository.save(nguoiDung);
     }
