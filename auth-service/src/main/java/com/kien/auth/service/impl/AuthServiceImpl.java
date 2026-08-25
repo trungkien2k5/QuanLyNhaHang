@@ -49,7 +49,10 @@ public class AuthServiceImpl implements AuthService {
                 .findByTenDangNhap(request.getTenDangNhap())
                 .orElseThrow();
 
-        String accessToken = jwtService.taoToken(nguoiDung.getTenDangNhap());
+        String accessToken = jwtService.taoToken(
+                nguoiDung.getTenDangNhap(),
+                nguoiDung.getVaiTro()
+        );
 
         String refreshToken = jwtService.taoRefreshToken(nguoiDung.getTenDangNhap());
 
@@ -118,7 +121,10 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String accessToken =
-                jwtService.taoToken(token.getNguoiDung().getTenDangNhap());
+                jwtService.taoToken(
+                        token.getNguoiDung().getTenDangNhap(),
+                        token.getNguoiDung().getVaiTro()
+                );
 
         return new RefreshTokenResponse(accessToken);
     }

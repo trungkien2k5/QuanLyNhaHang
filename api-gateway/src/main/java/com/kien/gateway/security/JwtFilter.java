@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;

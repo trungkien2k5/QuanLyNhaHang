@@ -76,7 +76,7 @@ services:
       - payment-service
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-
+      JWT_SECRET: ${JWT_SECRET}
 networks:
   default:
     name: quanlynhahang-network

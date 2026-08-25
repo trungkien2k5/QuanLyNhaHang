@@ -21,15 +21,15 @@ public class JwtService {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String taoToken(String tenDangNhap) {
+    public String taoToken(String tenDangNhap, String role) {
 
         return Jwts.builder()
                 .subject(tenDangNhap)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 86400000))
                 .signWith(getSignInKey())
                 .compact();
-
     }
     public String taoRefreshToken(String tenDangNhap) {
         return Jwts.builder()
