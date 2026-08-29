@@ -6,7 +6,7 @@ import lombok.Data;
 @Entity
 @Table(name = "LoaiMon")
 @Data
-public class LoaiMon {
+public class LoaiMon extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer maLoai;
