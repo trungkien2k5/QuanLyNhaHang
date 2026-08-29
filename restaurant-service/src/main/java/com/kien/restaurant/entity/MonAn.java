@@ -1,6 +1,5 @@
 package com.kien.restaurant.entity;
 
-import com.kien.restaurant.entity.LoaiMon;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -10,9 +9,10 @@ import java.math.BigDecimal;
 @Data
 @Entity
 @Table(name = "MonAn")
-public class MonAn  implements Serializable {
+public class MonAn extends BaseEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer maMon;
@@ -20,9 +20,9 @@ public class MonAn  implements Serializable {
     private BigDecimal donGia;
     private String trangThai;
 
-
     @Column(name = "anh")
     private String anh;
+
     @ManyToOne
     @JoinColumn(name = "MaLoai")
     private LoaiMon loaiMon;
