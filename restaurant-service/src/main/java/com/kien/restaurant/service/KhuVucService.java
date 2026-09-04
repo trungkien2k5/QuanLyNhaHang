@@ -5,6 +5,7 @@ import com.kien.restaurant.dto.request.UpdateKhuVucRequest;
 import com.kien.restaurant.entity.KhuVuc;
 import com.kien.restaurant.repository.KhuVucRepository;
 import lombok.RequiredArgsConstructor;
+import com.kien.restaurant.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class KhuVucService {
     public KhuVuc capNhat(Integer id, UpdateKhuVucRequest request) {
 
         KhuVuc khuVuc = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khu vực"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khu vực"));
 
         khuVuc.setTenKhuVuc(request.getTenKhuVuc());
 
@@ -40,7 +41,7 @@ public class KhuVucService {
     public void xoa(Integer id) {
 
         KhuVuc khuVuc = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khu vực"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khu vực"));
 
         repository.delete(khuVuc);
     }

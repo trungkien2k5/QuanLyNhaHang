@@ -3,7 +3,7 @@ package com.kien.restaurant.service;
 import com.kien.restaurant.entity.enums.TrangThaiBan;
 import com.kien.restaurant.mapper.BanMapper;
 import lombok.RequiredArgsConstructor;
-
+import com.kien.restaurant.exception.ResourceNotFoundException;
 import com.kien.restaurant.dto.BanDTO;
 import com.kien.restaurant.entity.Ban;
 import com.kien.restaurant.entity.KhuVuc;
@@ -50,7 +50,7 @@ public class BanService {
     public BanDTO capNhatTrangThai(Integer id, TrangThaiBan status) {
 
         Ban ban = banRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy bàn"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bàn"));
 
         ban.setStatus(status);
 

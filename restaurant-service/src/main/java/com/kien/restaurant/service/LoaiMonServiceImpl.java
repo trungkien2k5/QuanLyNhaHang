@@ -10,7 +10,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.kien.restaurant.exception.ResourceNotFoundException;
+import com.kien.restaurant.exception.ConflictException;
 import java.util.List;
 
 @Service
@@ -24,7 +25,7 @@ public class LoaiMonServiceImpl implements LoaiMonService {
     @CacheEvict(value = {"loaimon", "monan"}, allEntries = true)
     public LoaiMon them(CreateLoaiMonRequest request) {
         if (loaiMonRepository.existsByTenLoai(request.getTenLoai())) {
-            throw new RuntimeException("Tên loại món đã tồn tại");
+            throw new ConflictException("Tên loại món đã tồn tại");
         }
 
         LoaiMon loaiMon = new LoaiMon();
@@ -38,7 +39,7 @@ public class LoaiMonServiceImpl implements LoaiMonService {
     @CacheEvict(value = {"loaimon", "monan"}, allEntries = true)
     public LoaiMon sua(Integer id, UpdateLoaiMonRequest request) {
         LoaiMon loaiMon = loaiMonRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy loại món"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy loại món"));
 
         loaiMon.setTenLoai(request.getTenLoai());
 
@@ -50,7 +51,7 @@ public class LoaiMonServiceImpl implements LoaiMonService {
     @CacheEvict(value = {"loaimon", "monan"}, allEntries = true)
     public void xoa(Integer id) {
         LoaiMon loaiMon = loaiMonRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy loại món"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy loại món"));
 
         loaiMonRepository.delete(loaiMon);
     }
@@ -59,7 +60,7 @@ public class LoaiMonServiceImpl implements LoaiMonService {
     @Cacheable(value = "loaimon", key = "#id")
     public LoaiMon timTheoId(Integer id) {
         return loaiMonRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy loại món"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy loại món"));
     }
 
     @Override

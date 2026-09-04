@@ -1,9 +1,10 @@
 package com.kien.restaurant.service;
 
+import com.kien.restaurant.common.KafkaEventPublisher;
 import com.kien.restaurant.dto.MonAnDTO;
 import com.kien.restaurant.entity.LoaiMon;
 import com.kien.restaurant.entity.MonAn;
-import com.kien.restaurant.exception.KhongTimThayException;
+import com.kien.restaurant.exception.ResourceNotFoundException;
 import com.kien.restaurant.mapper.MonAnMapper;
 import com.kien.restaurant.repository.LoaiMonRepository;
 import com.kien.restaurant.repository.MonAnRepository;
@@ -12,9 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,6 +35,9 @@ class MonAnServiceTest {
 
     @Mock
     private MonAnMapper monAnMapper;
+
+    @Mock
+    private KafkaEventPublisher eventPublisher;
 
     @InjectMocks
     private MonAnService monAnService;
@@ -85,7 +87,7 @@ class MonAnServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThrows(
-                KhongTimThayException.class,
+                ResourceNotFoundException.class,
                 () -> monAnService.layTheoMa(1)
         );
 

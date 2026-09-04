@@ -2,8 +2,7 @@ package com.kien.payment.service;
 
 import com.kien.payment.dto.HoaDonDTO;
 import com.kien.payment.entity.HoaDon;
-import com.kien.payment.exception.KhongTimThayException;
-import com.kien.payment.exception.NghiepVuException;
+
 import com.kien.payment.repository.HoaDonRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,7 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.kien.payment.exception.ResourceNotFoundException;
+import com.kien.payment.exception.ConflictException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -79,7 +79,7 @@ public class HoaDonService {
         HoaDon hoaDon = timHoaDon(maHD);
 
         if ("Đã thanh toán".equals(hoaDon.getTrangThai())) {
-            throw new NghiepVuException(
+            throw new ConflictException(
                     "Không thể hủy hóa đơn đã thanh toán");
         }
 
@@ -93,7 +93,7 @@ public class HoaDonService {
         HoaDon hoaDon = timHoaDon(maHD);
 
         if ("Đã thanh toán".equals(hoaDon.getTrangThai())) {
-            throw new NghiepVuException("Hóa đơn đã thanh toán");
+            throw new ConflictException("Hóa đơn đã thanh toán");
         }
 
         hoaDon.setTrangThai("Đã thanh toán");
@@ -104,7 +104,7 @@ public class HoaDonService {
     private HoaDon timHoaDon(Integer maHD) {
         return hoaDonRepository.findById(maHD)
                 .orElseThrow(() ->
-                        new KhongTimThayException(
+                        new ResourceNotFoundException(
                                 "Không tìm thấy hóa đơn"));
     }
 }

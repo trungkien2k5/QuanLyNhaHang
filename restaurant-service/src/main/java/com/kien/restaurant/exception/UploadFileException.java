@@ -1,10 +1,8 @@
 package com.kien.restaurant.exception;
 
-import org.springframework.http.HttpStatus;
-
-public class UploadFileException extends BusinessException {
+public class UploadFileException extends BadRequestException {
 
     public UploadFileException(String message) {
-        super(HttpStatus.INTERNAL_SERVER_ERROR.value(), message);
+        super(message);
     }
 }

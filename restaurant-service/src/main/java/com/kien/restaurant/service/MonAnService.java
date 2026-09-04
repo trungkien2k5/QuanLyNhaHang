@@ -5,7 +5,7 @@ import com.kien.restaurant.common.MonAnEvent;
 import com.kien.restaurant.dto.MonAnDTO;
 import com.kien.restaurant.entity.LoaiMon;
 import com.kien.restaurant.entity.MonAn;
-import com.kien.restaurant.exception.KhongTimThayException;
+import com.kien.restaurant.exception.ResourceNotFoundException;
 import com.kien.restaurant.mapper.MonAnMapper;
 import com.kien.restaurant.repository.LoaiMonRepository;
 import com.kien.restaurant.repository.MonAnRepository;
@@ -162,12 +162,12 @@ public class MonAnService {
 
     private MonAn timMonAn(Integer maMon) {
         return monAnRepository.findById(maMon)
-                .orElseThrow(() -> new KhongTimThayException("Không tìm thấy món ăn"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy món ăn"));
     }
 
     private LoaiMon timLoaiMon(Integer maLoai) {
         return loaiMonRepository.findById(maLoai)
-                .orElseThrow(() -> new KhongTimThayException("Không tìm thấy loại món"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy loại món"));
     }
 
     private boolean coDieuKienLoc(

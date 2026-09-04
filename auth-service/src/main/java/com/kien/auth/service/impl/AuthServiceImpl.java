@@ -48,8 +48,10 @@ public class AuthServiceImpl implements AuthService {
 
         NguoiDung nguoiDung = nguoiDungRepository
                 .findByTenDangNhap(request.getTenDangNhap())
-                .orElseThrow();
-
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Không tìm thấy người dùng"
+                        ));
         String accessToken = jwtService.taoToken(
                 nguoiDung.getTenDangNhap(),
                 nguoiDung.getVaiTro()
@@ -219,7 +221,7 @@ public class AuthServiceImpl implements AuthService {
                             .isAfter(LocalDateTime.now())) {
 
                         throw new BadRequestException(
-                               
+
                                 "Vui lòng đợi 60 giây trước khi yêu cầu OTP mới"
                         );
                     }

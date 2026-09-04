@@ -6,8 +6,9 @@ import com.kien.payment.dto.CapNhatSoLuongDTO;
 import com.kien.payment.dto.ThemMonDTO;
 import com.kien.payment.entity.ChiTietHoaDon;
 import com.kien.payment.entity.HoaDon;
-import com.kien.payment.exception.KhongTimThayException;
-import com.kien.payment.exception.NghiepVuException;
+import com.kien.payment.exception.ResourceNotFoundException;
+import com.kien.payment.exception.BadRequestException;
+import com.kien.payment.exception.ConflictException;
 import com.kien.payment.id.ChiTietHoaDonId;
 import com.kien.payment.repository.ChiTietHoaDonRepository;
 import com.kien.payment.repository.HoaDonRepository;
@@ -87,7 +88,7 @@ public class ChiTietHoaDonService {
             CapNhatSoLuongDTO dto) {
 
         if (dto.getSoLuong() <= 0) {
-            throw new NghiepVuException("Số lượng phải lớn hơn 0");
+            throw new BadRequestException("Số lượng phải lớn hơn 0");
         }
 
         ChiTietHoaDon ct = timChiTiet(maHD, maMon);
@@ -113,7 +114,7 @@ public class ChiTietHoaDonService {
     private HoaDon timHoaDon(Integer maHD) {
         return hdr.findById(maHD)
                 .orElseThrow(() ->
-                        new KhongTimThayException(
+                        new ResourceNotFoundException(
                                 "Không tìm thấy hóa đơn"));
     }
 
@@ -122,13 +123,13 @@ public class ChiTietHoaDonService {
 
         return ctr.findById(id)
                 .orElseThrow(() ->
-                        new KhongTimThayException(
+                        new ResourceNotFoundException(
                                 "Không tìm thấy món trong hóa đơn"));
     }
 
     private void kiemTraHoaDon(HoaDon hoaDon) {
         if ("Đã thanh toán".equals(hoaDon.getTrangThai())) {
-            throw new NghiepVuException(
+            throw new ConflictException(
                     "Hóa đơn đã thanh toán");
         }
     }

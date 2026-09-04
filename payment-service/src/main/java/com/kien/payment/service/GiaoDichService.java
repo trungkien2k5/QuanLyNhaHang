@@ -8,7 +8,8 @@ import com.kien.payment.entity.HoaDon;
 import com.kien.payment.repository.GiaoDichRepository;
 import com.kien.payment.repository.HoaDonRepository;
 import org.springframework.stereotype.Service;
-
+import com.kien.payment.exception.ResourceNotFoundException;
+import com.kien.payment.exception.ConflictException;
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
@@ -19,9 +20,10 @@ public class GiaoDichService {
 
     public GiaoDich thanhToan(GiaoDichDTO dto) {
 
-        HoaDon hoaDon = hoaDonRepository.findById(dto.getMaHD()).orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
+        HoaDon hoaDon = hoaDonRepository.findById(dto.getMaHD()).orElseThrow(()
+                -> new ResourceNotFoundException("Không tìm thấy hóa đơn"));
         if ("Đã thanh toán".equals(hoaDon.getTrangThai())) {
-            throw new RuntimeException("Hóa đơn đã thanh toán");
+            throw new ConflictException("Hóa đơn đã thanh toán");
         }
         GiaoDich giaoDich = new GiaoDich();
         giaoDich.setHoaDon(hoaDon);

@@ -4,6 +4,7 @@ import com.kien.restaurant.common.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,42 +17,109 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(KhongTimThayException.class)
-    public ApiResponse<Void> handleNotFound(KhongTimThayException ex) {
-        return ApiResponse.error(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(
+            ResourceNotFoundException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(
+                        HttpStatus.NOT_FOUND.value(),
+                        ex.getMessage()
+                ));
     }
 
-    @ExceptionHandler(BusinessException.class)
-    public ApiResponse<Void> handleBusiness(BusinessException ex) {
-        return ApiResponse.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(
+            BadRequestException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(
+                        HttpStatus.BAD_REQUEST.value(),
+                        ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConflict(
+            ConflictException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage()
+                ));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ApiResponse<Void> handleValidation(MethodArgumentNotValidException ex) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+    public ResponseEntity<ApiResponse<Void>> handleValidation(
+            MethodArgumentNotValidException ex) {
+
+        String message = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error ->
+                        error.getField() + ": " + error.getDefaultMessage()
+                )
                 .collect(Collectors.joining("; "));
-        return ApiResponse.error(HttpStatus.BAD_REQUEST.value(), message);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(
+                        HttpStatus.BAD_REQUEST.value(),
+                        message
+                ));
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
-    public ApiResponse<Void> handleMethodValidation(HandlerMethodValidationException ex) {
-        return ApiResponse.error(HttpStatus.BAD_REQUEST.value(), "Dữ liệu request không hợp lệ");
+    public ResponseEntity<ApiResponse<Void>> handleMethodValidation(
+            HandlerMethodValidationException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Dữ liệu request không hợp lệ"
+                ));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ApiResponse<Void> handleConstraintViolation(ConstraintViolationException ex) {
-        return ApiResponse.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(
+            ConstraintViolationException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(
+                        HttpStatus.BAD_REQUEST.value(),
+                        ex.getMessage()
+                ));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ApiResponse<Void> handleAccessDenied(AccessDeniedException ex) {
-        return ApiResponse.error(HttpStatus.FORBIDDEN.value(), "Bạn không có quyền thực hiện thao tác này");
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(
+            AccessDeniedException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(
+                        HttpStatus.FORBIDDEN.value(),
+                        "Bạn không có quyền thực hiện thao tác này"
+                ));
     }
 
     @ExceptionHandler(Exception.class)
-    public ApiResponse<Void> handleUnexpected(Exception ex) {
+    public ResponseEntity<ApiResponse<Void>> handleException(
+            Exception ex) {
+
         log.error("Unhandled exception", ex);
-        return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Đã xảy ra lỗi hệ thống");
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "Đã xảy ra lỗi hệ thống"
+                ));
     }
 }
