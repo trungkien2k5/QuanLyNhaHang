@@ -5,7 +5,6 @@ import com.kien.auth.dto.reponse.MeResponse;
 import com.kien.auth.dto.reponse.RefreshTokenResponse;
 import com.kien.auth.dto.request.*;
 import com.kien.auth.entity.NguoiDung;
-import com.kien.auth.repository.NguoiDungRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -26,8 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final NguoiDungRepository nguoiDungRepository;
-    private final PasswordEncoder passwordEncoder;
+
 
     @Operation(summary = "Đăng nhập và nhận token")
     @PostMapping("/login")
@@ -47,11 +44,6 @@ public class AuthController {
     public ApiResponse<MeResponse> me(
             Authentication authentication) {
 
-        NguoiDung nguoiDung =
-                nguoiDungRepository
-                        .findByTenDangNhap(authentication.getName())
-                        .orElseThrow();
-
         return ApiResponse.<MeResponse>builder()
                 .success(true)
                 .message("Lấy thông tin thành công")
@@ -66,22 +58,10 @@ public class AuthController {
             Authentication authentication,
             @RequestBody ChangePasswordRequest request) {
 
-        NguoiDung nguoiDung =
-                nguoiDungRepository
-                        .findByTenDangNhap(authentication.getName())
-                        .orElseThrow();
-
-        if (!passwordEncoder.matches(
-                request.getOldPassword(),
-                nguoiDung.getMatKhau())) {
-
-            throw new RuntimeException("Mật khẩu cũ không đúng");
-        }
-
-        nguoiDung.setMatKhau(
-                passwordEncoder.encode(request.getNewPassword()));
-
-        nguoiDungRepository.save(nguoiDung);
+        authService.changePassword(
+                authentication.getName(),
+                request
+        );
 
         return ApiResponse.<String>builder()
                 .success(true)
@@ -89,7 +69,6 @@ public class AuthController {
                 .data("OK")
                 .build();
     }
-
     @Operation(summary = "Làm mới Access Token")
     @PostMapping("/refresh")
     public ApiResponse<RefreshTokenResponse> refresh(

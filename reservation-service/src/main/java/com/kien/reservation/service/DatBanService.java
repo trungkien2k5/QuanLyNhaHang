@@ -15,7 +15,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import com.kien.reservation.client.RestaurantClient;
 import org.springframework.stereotype.Service;
-
+import com.kien.reservation.exception.ResourceNotFoundException;
+import com.kien.reservation.exception.BadRequestException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -29,7 +30,7 @@ private final RestaurantClient restaurantClient;
     public DatBan them(DatBanDTO dto) {
         DatBan db = new DatBan();
         KhachHang kh = khrp.findById(dto.getMaKH())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khách hàng"));
 
         db.setKhachHang(kh);
         db.setNgayDat(dto.getNgayDat());
@@ -85,19 +86,27 @@ Specification<DatBan> specification =
 
     public DatBan layChiTiet(Integer id) {
         return dbr.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đặt bàn"));
+                .orElseThrow(() ->  new ResourceNotFoundException(
+                        "Không tìm thấy đặt bàn"
+                ));
     }
 
     public DatBan huyDatBan(Integer id) {
         DatBan datBan = dbr.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đặt bàn"));
+                .orElseThrow(() ->  new ResourceNotFoundException(
+                        "Không tìm thấy đặt bàn"
+                ));
 
         if ("Đã hủy".equals(datBan.getTrangThai())) {
-            throw new RuntimeException("Đặt bàn đã được hủy");
+            throw new BadRequestException(
+                    "Đặt bàn đã được hủy"
+            );
         }
 
         if ("Hoàn thành".equals(datBan.getTrangThai())) {
-            throw new RuntimeException("Không thể hủy đặt bàn đã hoàn thành");
+            throw new BadRequestException(
+                    "Không thể hủy đặt bàn đã hoàn thành"
+            );
         }
 
         datBan.setTrangThai("Đã hủy");

@@ -22,4 +22,6 @@ public class Otp {
 
     private Boolean used=false;
 
+    private Integer attemptCount = 0;
+    private LocalDateTime createdAt;
 }

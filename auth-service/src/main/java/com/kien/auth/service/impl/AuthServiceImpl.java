@@ -106,27 +106,64 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public RefreshTokenResponse refreshToken(RefreshTokenRequest request) {
 
         RefreshToken token = refreshTokenRepository
                 .findByToken(request.getRefreshToken())
-                .orElseThrow(() -> new BusinessException(404, "Refresh Token không tồn tại"));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                404,
+                                "Refresh Token không tồn tại"
+                        ));
 
         if (Boolean.TRUE.equals(token.getRevoked())) {
-            throw new BusinessException(400, "Refresh Token đã bị thu hồi");
+            throw new BusinessException(
+                    400,
+                    "Refresh Token đã bị thu hồi"
+            );
         }
 
         if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(400, "Refresh Token đã hết hạn");
+            throw new BusinessException(
+                    400,
+                    "Refresh Token đã hết hạn"
+            );
         }
 
-        String accessToken =
-                jwtService.taoToken(
-                        token.getNguoiDung().getTenDangNhap(),
-                        token.getNguoiDung().getVaiTro()
+        NguoiDung nguoiDung = token.getNguoiDung();
+
+        // Thu hồi Refresh Token cũ
+        token.setRevoked(true);
+        refreshTokenRepository.save(token);
+
+        // Tạo Refresh Token mới
+        String newRefreshToken =
+                jwtService.taoRefreshToken(
+                        nguoiDung.getTenDangNhap()
                 );
 
-        return new RefreshTokenResponse(accessToken);
+        RefreshToken newToken = new RefreshToken();
+        newToken.setToken(newRefreshToken);
+        newToken.setNguoiDung(nguoiDung);
+        newToken.setExpiredAt(
+                LocalDateTime.now().plusDays(7)
+        );
+        newToken.setRevoked(false);
+
+        refreshTokenRepository.save(newToken);
+
+        // Tạo Access Token mới
+        String accessToken =
+                jwtService.taoToken(
+                        nguoiDung.getTenDangNhap(),
+                        nguoiDung.getVaiTro()
+                );
+
+        return new RefreshTokenResponse(
+                accessToken,
+                newRefreshToken
+        );
     }
 
     @Override
@@ -153,14 +190,38 @@ public class AuthServiceImpl implements AuthService {
     public void forgotPassword(ForgotPasswordRequest request) {
 
         nguoiDungRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException(404, "Email không tồn tại"));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                404,
+                                "Email không tồn tại"
+                        ));
+
+        // Rate limit: chỉ cho gửi OTP mới sau 60 giây
+        otpRepository
+                .findTopByEmailOrderByIdDesc(request.getEmail())
+                .ifPresent(lastOtp -> {
+
+                    if (lastOtp.getCreatedAt() != null
+                            && lastOtp.getCreatedAt()
+                            .plusSeconds(60)
+                            .isAfter(LocalDateTime.now())) {
+
+                        throw new BusinessException(
+                                429,
+                                "Vui lòng đợi 60 giây trước khi yêu cầu OTP mới"
+                        );
+                    }
+                });
 
         String otp = generateOtp();
 
         Otp entity = new Otp();
         entity.setEmail(request.getEmail());
         entity.setOtp(otp);
+        entity.setCreatedAt(LocalDateTime.now());
         entity.setExpiredAt(LocalDateTime.now().plusMinutes(5));
+        entity.setUsed(false);
+        entity.setAttemptCount(0);
 
         otpRepository.save(entity);
 
@@ -168,27 +229,69 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void resetPassword(ResetPasswordRequest request) {
 
         Otp otp = otpRepository
                 .findTopByEmailOrderByIdDesc(request.getEmail())
-                .orElseThrow(() -> new BusinessException(404, "Không tìm thấy OTP"));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                404,
+                                "Không tìm thấy OTP"
+                        ));
 
-        if (otp.getUsed()) {
-            throw new BusinessException(400, "OTP đã được sử dụng");
+        // OTP đã sử dụng
+        if (Boolean.TRUE.equals(otp.getUsed())) {
+            throw new BusinessException(
+                    400,
+                    "OTP đã được sử dụng"
+            );
         }
 
+        // OTP hết hạn
         if (otp.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(400, "OTP hết hạn");
+            throw new BusinessException(
+                    400,
+                    "OTP hết hạn"
+            );
         }
 
+        // Giới hạn 5 lần nhập sai
+        if (otp.getAttemptCount() >= 5) {
+            throw new BusinessException(
+                    400,
+                    "OTP đã bị khóa do nhập sai quá nhiều lần"
+            );
+        }
+
+        // OTP sai
         if (!otp.getOtp().equals(request.getOtp())) {
-            throw new BusinessException(400, "OTP không đúng");
+
+            otp.setAttemptCount(
+                    otp.getAttemptCount() + 1
+            );
+
+            // Nếu sai lần thứ 5 thì khóa luôn
+            if (otp.getAttemptCount() >= 5) {
+                otp.setUsed(true);
+            }
+
+            otpRepository.save(otp);
+
+            throw new BusinessException(
+                    400,
+                    "OTP không đúng"
+            );
         }
 
+        // OTP đúng
         NguoiDung nguoiDung = nguoiDungRepository
                 .findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException(404, "Không tìm thấy người dùng"));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                404,
+                                "Không tìm thấy người dùng"
+                        ));
 
         nguoiDung.setMatKhau(
                 passwordEncoder.encode(request.getNewPassword())
@@ -196,6 +299,7 @@ public class AuthServiceImpl implements AuthService {
 
         nguoiDungRepository.save(nguoiDung);
 
+        // Đánh dấu OTP đã sử dụng
         otp.setUsed(true);
         otpRepository.save(otp);
     }
@@ -239,9 +343,6 @@ public class AuthServiceImpl implements AuthService {
         }
         nguoiDung.setHoTen(request.getHoTen());
         nguoiDung.setEmail(request.getEmail());
-        nguoiDung.setHoTen(request.getHoTen());
-        nguoiDung.setEmail(request.getEmail());
-
         nguoiDungRepository.save(nguoiDung);
     }
 }
