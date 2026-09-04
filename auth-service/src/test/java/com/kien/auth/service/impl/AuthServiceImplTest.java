@@ -11,7 +11,7 @@ import com.kien.auth.dto.reponse.RefreshTokenResponse;
 import com.kien.auth.entity.NguoiDung;
 import com.kien.auth.entity.Otp;
 import com.kien.auth.entity.RefreshToken;
-import com.kien.auth.exception.BusinessException;
+import com.kien.auth.exception.BadRequestException;
 import com.kien.auth.mail.service.MailService;
 import com.kien.auth.repository.NguoiDungRepository;
 import com.kien.auth.repository.OtpRepository;
@@ -109,8 +109,8 @@ class AuthServiceImplTest {
         when(nguoiDungRepository.existsByTenDangNhap("kien"))
                 .thenReturn(true);
 
-        BusinessException exception = assertThrows(
-                BusinessException.class,
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
                 () -> authService.register(registerRequest)
         );
 
@@ -242,8 +242,8 @@ class AuthServiceImplTest {
                 "encoded-old-password"
         )).thenReturn(false);
 
-        BusinessException exception = assertThrows(
-                BusinessException.class,
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
                 () -> authService.changePassword("kien", request)
         );
 

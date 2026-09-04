@@ -7,7 +7,8 @@ import com.kien.auth.dto.request.*;
 import com.kien.auth.entity.NguoiDung;
 import com.kien.auth.entity.Otp;
 import com.kien.auth.entity.RefreshToken;
-import com.kien.auth.exception.BusinessException;
+import com.kien.auth.exception.BadRequestException;
+import com.kien.auth.exception.ResourceNotFoundException;
 import com.kien.auth.mail.service.MailService;
 import com.kien.auth.repository.NguoiDungRepository;
 import com.kien.auth.repository.OtpRepository;
@@ -54,7 +55,8 @@ public class AuthServiceImpl implements AuthService {
                 nguoiDung.getVaiTro()
         );
 
-        String refreshToken = jwtService.taoRefreshToken(nguoiDung.getTenDangNhap());
+        String refreshToken =
+                jwtService.taoRefreshToken(nguoiDung.getTenDangNhap());
 
         RefreshToken token = new RefreshToken();
         token.setToken(refreshToken);
@@ -72,7 +74,10 @@ public class AuthServiceImpl implements AuthService {
 
         NguoiDung nguoiDung = nguoiDungRepository
                 .findByTenDangNhap(tenDangNhap)
-                .orElseThrow(() -> new BusinessException(404, "Không tìm thấy người dùng"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Không tìm thấy người dùng"
+                        ));
 
         return new MeResponse(
                 nguoiDung.getMaND(),
@@ -85,48 +90,53 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void changePassword(String tenDangNhap,
-                               ChangePasswordRequest request) {
+    public void changePassword(
+            String tenDangNhap,
+            ChangePasswordRequest request) {
 
         NguoiDung nguoiDung = nguoiDungRepository
                 .findByTenDangNhap(tenDangNhap)
-                .orElseThrow(() -> new BusinessException(404, "Không tìm thấy người dùng"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Không tìm thấy người dùng"
+                        ));
 
         if (!passwordEncoder.matches(
                 request.getOldPassword(),
                 nguoiDung.getMatKhau())) {
 
-            throw new BusinessException(400, "Mật khẩu cũ không đúng");
+            throw new BadRequestException(
+                    "Mật khẩu cũ không đúng"
+            );
         }
 
         nguoiDung.setMatKhau(
-                passwordEncoder.encode(request.getNewPassword()));
+                passwordEncoder.encode(request.getNewPassword())
+        );
 
         nguoiDungRepository.save(nguoiDung);
     }
 
     @Override
     @Transactional
-    public RefreshTokenResponse refreshToken(RefreshTokenRequest request) {
+    public RefreshTokenResponse refreshToken(
+            RefreshTokenRequest request) {
 
         RefreshToken token = refreshTokenRepository
                 .findByToken(request.getRefreshToken())
                 .orElseThrow(() ->
-                        new BusinessException(
-                                404,
+                        new ResourceNotFoundException(
                                 "Refresh Token không tồn tại"
                         ));
 
         if (Boolean.TRUE.equals(token.getRevoked())) {
-            throw new BusinessException(
-                    400,
+            throw new BadRequestException(
                     "Refresh Token đã bị thu hồi"
             );
         }
 
         if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(
-                    400,
+            throw new BadRequestException(
                     "Refresh Token đã hết hạn"
             );
         }
@@ -171,7 +181,10 @@ public class AuthServiceImpl implements AuthService {
 
         RefreshToken refreshToken = refreshTokenRepository
                 .findByToken(request.getRefreshToken())
-                .orElseThrow(() -> new BusinessException(404, "Refresh Token không tồn tại"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Refresh Token không tồn tại"
+                        ));
 
         refreshToken.setRevoked(true);
 
@@ -191,8 +204,7 @@ public class AuthServiceImpl implements AuthService {
 
         nguoiDungRepository.findByEmail(request.getEmail())
                 .orElseThrow(() ->
-                        new BusinessException(
-                                404,
+                        new ResourceNotFoundException(
                                 "Email không tồn tại"
                         ));
 
@@ -206,8 +218,8 @@ public class AuthServiceImpl implements AuthService {
                             .plusSeconds(60)
                             .isAfter(LocalDateTime.now())) {
 
-                        throw new BusinessException(
-                                429,
+                        throw new BadRequestException(
+                               
                                 "Vui lòng đợi 60 giây trước khi yêu cầu OTP mới"
                         );
                     }
@@ -235,31 +247,27 @@ public class AuthServiceImpl implements AuthService {
         Otp otp = otpRepository
                 .findTopByEmailOrderByIdDesc(request.getEmail())
                 .orElseThrow(() ->
-                        new BusinessException(
-                                404,
+                        new ResourceNotFoundException(
                                 "Không tìm thấy OTP"
                         ));
 
         // OTP đã sử dụng
         if (Boolean.TRUE.equals(otp.getUsed())) {
-            throw new BusinessException(
-                    400,
+            throw new BadRequestException(
                     "OTP đã được sử dụng"
             );
         }
 
         // OTP hết hạn
         if (otp.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(
-                    400,
+            throw new BadRequestException(
                     "OTP hết hạn"
             );
         }
 
         // Giới hạn 5 lần nhập sai
         if (otp.getAttemptCount() >= 5) {
-            throw new BusinessException(
-                    400,
+            throw new BadRequestException(
                     "OTP đã bị khóa do nhập sai quá nhiều lần"
             );
         }
@@ -278,8 +286,7 @@ public class AuthServiceImpl implements AuthService {
 
             otpRepository.save(otp);
 
-            throw new BusinessException(
-                    400,
+            throw new BadRequestException(
                     "OTP không đúng"
             );
         }
@@ -288,8 +295,7 @@ public class AuthServiceImpl implements AuthService {
         NguoiDung nguoiDung = nguoiDungRepository
                 .findByEmail(request.getEmail())
                 .orElseThrow(() ->
-                        new BusinessException(
-                                404,
+                        new ResourceNotFoundException(
                                 "Không tìm thấy người dùng"
                         ));
 
@@ -308,12 +314,20 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void register(RegisterRequest request) {
 
-        if (nguoiDungRepository.existsByTenDangNhap(request.getTenDangNhap())) {
-            throw new BusinessException(400, "Tên đăng nhập đã tồn tại");
+        if (nguoiDungRepository.existsByTenDangNhap(
+                request.getTenDangNhap())) {
+
+            throw new BadRequestException(
+                    "Tên đăng nhập đã tồn tại"
+            );
         }
 
-        if (nguoiDungRepository.existsByEmail(request.getEmail())) {
-            throw new BusinessException(400, "Email đã tồn tại");
+        if (nguoiDungRepository.existsByEmail(
+                request.getEmail())) {
+
+            throw new BadRequestException(
+                    "Email đã tồn tại"
+            );
         }
 
         NguoiDung nguoiDung = new NguoiDung();
@@ -328,21 +342,33 @@ public class AuthServiceImpl implements AuthService {
 
         nguoiDungRepository.save(nguoiDung);
     }
+
     @Override
     @Transactional
-    public void updateProfile(String tenDangNhap,
-                              UpdateProfileRequest request) {
+    public void updateProfile(
+            String tenDangNhap,
+            UpdateProfileRequest request) {
 
         NguoiDung nguoiDung = nguoiDungRepository
                 .findByTenDangNhap(tenDangNhap)
-                .orElseThrow(() -> new BusinessException(404, "Không tìm thấy người dùng"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Không tìm thấy người dùng"
+                        ));
 
         if (!nguoiDung.getEmail().equals(request.getEmail())
-                && nguoiDungRepository.existsByEmail(request.getEmail())) {
-            throw new BusinessException(400, "Email đã tồn tại");
+                && nguoiDungRepository.existsByEmail(
+                request.getEmail())) {
+
+            throw new BadRequestException(
+                    "Email đã tồn tại"
+            );
         }
+
         nguoiDung.setHoTen(request.getHoTen());
         nguoiDung.setEmail(request.getEmail());
+
         nguoiDungRepository.save(nguoiDung);
     }
 }
+

@@ -120,7 +120,10 @@ class AuthControllerTest {
     void refresh_success() throws Exception {
 
         RefreshTokenResponse response =
-                new RefreshTokenResponse("access-token-test");
+                new RefreshTokenResponse(
+                        "access-token-test",
+                        "refresh-token-test"
+                );
 
         when(authService.refreshToken(any(RefreshTokenRequest.class)))
                 .thenReturn(response);
