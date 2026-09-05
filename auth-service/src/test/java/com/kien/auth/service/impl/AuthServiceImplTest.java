@@ -19,6 +19,7 @@ import com.kien.auth.repository.RefreshTokenRepository;
 import com.kien.auth.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.kien.auth.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -173,7 +174,7 @@ class AuthServiceImplTest {
                 .thenReturn(java.util.Optional.empty());
 
         assertThrows(
-                java.util.NoSuchElementException.class,
+                ResourceNotFoundException.class,
                 () -> authService.login(request)
         );
 
