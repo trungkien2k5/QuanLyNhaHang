@@ -2,7 +2,6 @@
 
 # Quản Lý Nhà Hàng
 
-![CI](https://github.com/trungkien2k5/QuanLyNhaHang/actions/workflows/ci.yml/badge.svg)
 Hệ thống quản lý nhà hàng được xây dựng theo kiến trúc **Microservices**, sử dụng Spring Boot và các thành phần hỗ trợ cho giao tiếp giữa các service, caching, xử lý bất đồng bộ và khả năng phục hồi.
 
 ##  Tổng quan
