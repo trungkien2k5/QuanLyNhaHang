@@ -1,3 +1,5 @@
+![CI](https://github.com/trungkien2k5/QuanLyNhaHang/actions/workflows/ci.yml/badge.svg)
+
 # Quản Lý Nhà Hàng
 
 ![CI](https://github.com/trungkien2k5/QuanLyNhaHang/actions/workflows/ci.yml/badge.svg)
