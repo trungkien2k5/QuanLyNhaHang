@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build API Gateway
+        run: ./mvnw -f api-gateway/pom.xml clean verify
+
+      - name: Build Auth Service
+        run: ./mvnw -f auth-service/pom.xml clean verify
+
+      - name: Build Discovery Service
+        run: ./mvnw -f discovery-service/pom.xml clean verify
+
+      - name: Build Payment Service
+        run: ./mvnw -f payment-service/pom.xml clean verify
+
+      - name: Build Reservation Service
+        run: ./mvnw -f reservation-service/pom.xml clean verify
+
+      - name: Build Restaurant Service
+        run: ./mvnw -f restaurant-service/pom.xml clean verify
