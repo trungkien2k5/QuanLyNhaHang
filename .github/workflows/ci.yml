@@ -2,16 +2,21 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+      - develop
+
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+      - develop
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Setup Java 17
@@ -22,19 +27,19 @@ jobs:
           cache: maven
 
       - name: Build and test API Gateway
-        run: mvn -B -f api-gateway/pom.xml clean verify -Dtest='!**/*ApplicationTests'
+        run: mvn -B -f api-gateway/pom.xml clean verify -Dtest='!**/*ApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
 
       - name: Build and test Auth Service
-        run: mvn -B -f auth-service/pom.xml clean verify -Dtest='!**/*ApplicationTests'
+        run: mvn -B -f auth-service/pom.xml clean verify -Dtest='!**/*ApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
 
       - name: Build and test Discovery Service
-        run: mvn -B -f discovery-service/pom.xml clean verify -Dtest='!**/*ApplicationTests'
+        run: mvn -B -f discovery-service/pom.xml clean verify -Dtest='!**/*ApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
 
       - name: Build and test Payment Service
-        run: mvn -B -f payment-service/pom.xml clean verify -Dtest='!**/*ApplicationTests'
+        run: mvn -B -f payment-service/pom.xml clean verify -Dtest='!**/*ApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
 
       - name: Build and test Reservation Service
-        run: mvn -B -f reservation-service/pom.xml clean verify -Dtest='!**/*ApplicationTests'
+        run: mvn -B -f reservation-service/pom.xml clean verify -Dtest='!**/*ApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
 
       - name: Build and test Restaurant Service
-        run: mvn -B -f restaurant-service/pom.xml clean verify -Dtest='!**/*ApplicationTests'
+        run: mvn -B -f restaurant-service/pom.xml clean verify -Dtest='!**/*ApplicationTests' -Dsurefire.failIfNoSpecifiedTests=false
