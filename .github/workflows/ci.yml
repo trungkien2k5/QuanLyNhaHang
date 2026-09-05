@@ -22,19 +22,19 @@ jobs:
           cache: maven
 
       - name: Build API Gateway
-        run: ./mvnw -f api-gateway/pom.xml clean verify
+        run: mvn -f api-gateway/pom.xml clean verify
 
       - name: Build Auth Service
-        run: ./mvnw -f auth-service/pom.xml clean verify
+        run: mvn -f auth-service/pom.xml clean verify
 
       - name: Build Discovery Service
-        run: ./mvnw -f discovery-service/pom.xml clean verify
+        run: mvn -f discovery-service/pom.xml clean verify
 
       - name: Build Payment Service
-        run: ./mvnw -f payment-service/pom.xml clean verify
+        run: mvn -f payment-service/pom.xml clean verify
 
       - name: Build Reservation Service
-        run: ./mvnw -f reservation-service/pom.xml clean verify
+        run: mvn -f reservation-service/pom.xml clean verify
 
       - name: Build Restaurant Service
-        run: ./mvnw -f restaurant-service/pom.xml clean verify
+        run: mvn -f restaurant-service/pom.xml clean verify
