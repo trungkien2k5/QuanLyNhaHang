@@ -2,7 +2,7 @@
 
 Hệ thống quản lý nhà hàng được xây dựng theo kiến trúc **Microservices**, sử dụng Spring Boot và các thành phần hỗ trợ cho giao tiếp giữa các service, caching, xử lý bất đồng bộ và khả năng phục hồi.
 
-## 📌 Tổng quan
+##  Tổng quan
 
 Project mô phỏng hệ thống backend quản lý nhà hàng với các nghiệp vụ chính:
 
@@ -17,7 +17,7 @@ Project mô phỏng hệ thống backend quản lý nhà hàng với các nghi�
 
 ---
 
-## 🏗️ 1. Kiến trúc hệ thống
+##  1. Kiến trúc hệ thống
 
 ```mermaid
 flowchart TB
@@ -91,7 +91,7 @@ Cách tổ chức này giúp giảm coupling và đảm bảo mỗi service sở
 
 ---
 
-## 🛠️ 2. Công nghệ sử dụng
+##  2. Công nghệ sử dụng
 
 | Công nghệ | Mục đích |
 |---|---|
@@ -113,7 +113,7 @@ Cách tổ chức này giúp giảm coupling và đảm bảo mỗi service sở
 
 ---
 
-## 🚀 3. Cách chạy project
+##  3. Cách chạy project
 
 ### 3.1. Yêu cầu môi trường
 
@@ -226,7 +226,7 @@ Docker Compose đã khai báo dependency giữa các container. Tuy nhiên, SQL 
 
 ---
 
-## 📖 4. Demo Swagger / API
+##  4. Demo Swagger / API
 
 ### Swagger UI
 
@@ -320,7 +320,7 @@ CRUD /giaodich
 
 ---
 
-## ⚙️ 5. Environment Variables
+##  5. Environment Variables
 
 Project sử dụng Environment Variables cho các thông tin cấu hình và thông tin nhạy cảm.
 
@@ -356,7 +356,7 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 
 ---
 
-## 📁 6. Cấu trúc project
+##  6. Cấu trúc project
 
 ```text
 QuanLyNhaHang/
@@ -376,7 +376,7 @@ Mỗi service được tổ chức độc lập và có `pom.xml`, Dockerfile v�
 
 ---
 
-## 🔐 7. Authentication & Authorization
+##  7. Authentication & Authorization
 
 Hệ thống sử dụng:
 
@@ -391,7 +391,7 @@ API Gateway sử dụng JWT Secret để kiểm tra token trước khi request �
 
 ---
 
-## ⚡ 8. Caching & Event-driven
+##  8. Caching & Event-driven
 
 ### Redis
 
@@ -414,7 +414,7 @@ Kafka trong project chạy theo mô hình **KRaft**, không cần Zookeeper.
 
 ---
 
-## 🛡️ 9. Khả năng chịu lỗi
+##  9. Khả năng chịu lỗi
 
 Restaurant Service cấu hình Resilience4j cho Kafka Publisher:
 
@@ -427,7 +427,7 @@ Mục tiêu là tránh việc một dependency lỗi kéo theo việc toàn bộ
 
 ---
 
-## 📊 10. Monitoring
+##  10. Monitoring
 
 Spring Boot Actuator được sử dụng để cung cấp:
 
@@ -445,7 +445,7 @@ Ví dụ:
 
 ---
 
-## 🐳 11. Infrastructure
+##  11. Infrastructure
 
 `docker-compose.yml` cung cấp:
 
@@ -462,7 +462,7 @@ SQL Server hiện chạy trên host machine và được các container kết n�
 
 ---
 
-## 📌 12. Lưu ý
+##  12. Lưu ý
 
 - Cần khởi động SQL Server trước khi chạy các service.
 - Các database phải tồn tại đúng tên cấu hình.
@@ -472,7 +472,7 @@ SQL Server hiện chạy trên host machine và được các container kết n�
 
 ---
 
-## 👤 Tác giả
+##  Tác giả
 
 **Trung Kiên**
 
