@@ -8,7 +8,8 @@ import java.time.LocalTime;
 public class DatBanDTO {
     @Schema(description = "Mã khách hàng đặt bàn", example = "1")
     private Integer maKH;
-
+    @Schema(description = "Mã bàn", example = "1")
+    private Integer maBan;
     @Schema(description = "Ngày đặt bàn", example = "2026-08-01")
     private LocalDate ngayDat;
 

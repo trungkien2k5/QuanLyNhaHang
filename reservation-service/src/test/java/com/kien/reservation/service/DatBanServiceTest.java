@@ -19,13 +19,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-
+import com.kien.reservation.repository.ChiTietDatBanRepository;
 @ExtendWith(MockitoExtension.class)
 class DatBanServiceTest {
 
     @Mock
     private DatBanRepository dbr;
-
+    @Mock
+    private ChiTietDatBanRepository chiTietDatBanRepository;
     @Mock
     private KhachHangRepository khrp;
 
@@ -38,33 +39,70 @@ class DatBanServiceTest {
     @Test
     void them_success() {
         DatBanDTO dto = new DatBanDTO();
+
         dto.setMaKH(1);
+        dto.setMaBan(10);
         dto.setNgayDat(LocalDate.of(2026, 8, 30));
+        dto.setGioBatDau(java.time.LocalTime.of(18, 0));
+        dto.setGioKetThuc(java.time.LocalTime.of(20, 0));
         dto.setSoNguoi(4);
 
         KhachHang khachHang = new KhachHang();
+
+        when(dbr.existsConflict(
+                eq(10),
+                eq(dto.getNgayDat()),
+                eq(dto.getGioBatDau()),
+                eq(dto.getGioKetThuc())
+        )).thenReturn(false);
 
         when(khrp.findById(1))
                 .thenReturn(Optional.of(khachHang));
 
         when(dbr.save(any(DatBan.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> {
+                    DatBan datBan = invocation.getArgument(0);
+                    datBan.setMaDatBan(1);
+                    return datBan;
+                });
 
         DatBan result = datBanService.them(dto);
 
         assertEquals(khachHang, result.getKhachHang());
         assertEquals(dto.getNgayDat(), result.getNgayDat());
+        assertEquals(dto.getGioBatDau(), result.getGioBatDau());
+        assertEquals(dto.getGioKetThuc(), result.getGioKetThuc());
         assertEquals(dto.getSoNguoi(), result.getSoNguoi());
         assertEquals("Chờ xác nhận", result.getTrangThai());
 
         verify(khrp).findById(1);
+        verify(dbr).existsConflict(
+                10,
+                dto.getNgayDat(),
+                dto.getGioBatDau(),
+                dto.getGioKetThuc()
+        );
         verify(dbr).save(any(DatBan.class));
+        verify(chiTietDatBanRepository).save(any());
     }
 
     @Test
     void them_customerNotFound() {
         DatBanDTO dto = new DatBanDTO();
+
         dto.setMaKH(999);
+        dto.setMaBan(10);
+        dto.setNgayDat(LocalDate.of(2026, 8, 30));
+        dto.setGioBatDau(java.time.LocalTime.of(18, 0));
+        dto.setGioKetThuc(java.time.LocalTime.of(20, 0));
+        dto.setSoNguoi(4);
+
+        when(dbr.existsConflict(
+                eq(10),
+                eq(dto.getNgayDat()),
+                eq(dto.getGioBatDau()),
+                eq(dto.getGioKetThuc())
+        )).thenReturn(false);
 
         when(khrp.findById(999))
                 .thenReturn(Optional.empty());
@@ -79,9 +117,9 @@ class DatBanServiceTest {
                 exception.getMessage()
         );
 
+        verify(khrp).findById(999);
         verify(dbr, never()).save(any());
     }
-
     @Test
     void layChiTiet_success() {
         DatBan datBan = new DatBan();

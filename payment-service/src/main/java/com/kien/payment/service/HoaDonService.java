@@ -2,7 +2,9 @@ package com.kien.payment.service;
 
 import com.kien.payment.dto.HoaDonDTO;
 import com.kien.payment.entity.HoaDon;
-
+import com.kien.payment.specification.HoaDonSpecification;
+import org.springframework.data.jpa.domain.Specification;
+import java.util.Set;
 import com.kien.payment.repository.HoaDonRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,13 +36,49 @@ public class HoaDonService {
             String sort,
             String direction) {
 
+        Set<String> allowedSortFields = Set.of(
+                "maHD",
+                "maKH",
+                "ngayLap",
+                "tongTien",
+                "trangThai"
+        );
+
+        if (!allowedSortFields.contains(sort)) {
+            throw new ConflictException(
+                    "Field sort không hợp lệ: " + sort
+            );
+        }
+
+        if (!direction.equalsIgnoreCase("asc")
+                && !direction.equalsIgnoreCase("desc")) {
+            throw new ConflictException(
+                    "Direction phải là asc hoặc desc"
+            );
+        }
+
         Sort sapXep = direction.equalsIgnoreCase("desc")
                 ? Sort.by(sort).descending()
                 : Sort.by(sort).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sapXep);
 
-        return hoaDonRepository.findAll(pageable);
+        Specification<HoaDon> specification =
+                Specification
+                        .where(HoaDonSpecification.coTuNgay(
+                                tuNgay != null
+                                        ? tuNgay.atStartOfDay()
+                                        : null))
+                        .and(HoaDonSpecification.coDenNgay(
+                                denNgay != null
+                                        ? denNgay.plusDays(1)
+                                        .atStartOfDay()
+                                        .minusNanos(1)
+                                        : null))
+                        .and(HoaDonSpecification.coMaKH(maKH))
+                        .and(HoaDonSpecification.coTrangThai(trangThai));
+
+        return hoaDonRepository.findAll(specification, pageable);
     }
 
     public HoaDon layTheoId(Integer maHD) {

@@ -10,7 +10,4 @@ public class ChiTietDatBan {
 
     @EmbeddedId
     private ChiTietDatBanId id;
-
-
-
 }
