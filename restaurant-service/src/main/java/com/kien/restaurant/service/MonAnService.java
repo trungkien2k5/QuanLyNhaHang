@@ -5,6 +5,7 @@ import com.kien.restaurant.common.MonAnEvent;
 import com.kien.restaurant.dto.MonAnDTO;
 import com.kien.restaurant.entity.LoaiMon;
 import com.kien.restaurant.entity.MonAn;
+import com.kien.restaurant.exception.BadRequestException;
 import com.kien.restaurant.exception.ResourceNotFoundException;
 import com.kien.restaurant.mapper.MonAnMapper;
 import com.kien.restaurant.repository.LoaiMonRepository;
@@ -25,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -66,6 +68,37 @@ public class MonAnService {
             String trangThai,
             String sort,
             String direction) {
+
+        /*
+         * Chỉ cho phép client sắp xếp theo các field được whitelist.
+         */
+        Set<String> truongDuocSapXep = Set.of(
+                "maMon",
+                "tenMon",
+                "gia",
+                "trangThai"
+        );
+
+        if (sort == null || sort.isBlank()) {
+            sort = "maMon";
+        }
+
+        if (!truongDuocSapXep.contains(sort)) {
+            throw new BadRequestException(
+                    "Không được sắp xếp theo trường: " + sort
+            );
+        }
+
+        if (direction == null || direction.isBlank()) {
+            direction = "asc";
+        }
+
+        if (!direction.equalsIgnoreCase("asc")
+                && !direction.equalsIgnoreCase("desc")) {
+            throw new BadRequestException(
+                    "Chiều sắp xếp phải là asc hoặc desc"
+            );
+        }
 
         Sort sapXep = direction.equalsIgnoreCase("desc")
                 ? Sort.by(sort).descending()
@@ -116,8 +149,12 @@ public class MonAnService {
                 try {
                     fileService.delete(anhMoi);
                 } catch (Exception cleanupException) {
-                    log.warn("Không thể xóa ảnh mới sau khi cập nhật món ăn thất bại: maMon={}, anhMoi={}",
-                            maMon, anhMoi, cleanupException);
+                    log.warn(
+                            "Không thể xóa ảnh mới sau khi cập nhật món ăn thất bại: maMon={}, anhMoi={}",
+                            maMon,
+                            anhMoi,
+                            cleanupException
+                    );
                 }
             }
             throw e;
@@ -141,9 +178,19 @@ public class MonAnService {
         eventPublisher.publish(
                 MENU_TOPIC,
                 String.valueOf(monAn.getMaMon()),
-                new MonAnEvent(action, monAn.getMaMon(), monAn.getTenMon(), LocalDateTime.now())
+                new MonAnEvent(
+                        action,
+                        monAn.getMaMon(),
+                        monAn.getTenMon(),
+                        LocalDateTime.now()
+                )
         ).exceptionally(ex -> {
-            log.error("Không thể publish menu event action={} maMon={}", action, monAn.getMaMon(), ex);
+            log.error(
+                    "Không thể publish menu event action={} maMon={}",
+                    action,
+                    monAn.getMaMon(),
+                    ex
+            );
             return null;
         });
     }
@@ -162,12 +209,14 @@ public class MonAnService {
 
     private MonAn timMonAn(Integer maMon) {
         return monAnRepository.findById(maMon)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy món ăn"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Không tìm thấy món ăn"));
     }
 
     private LoaiMon timLoaiMon(Integer maLoai) {
         return loaiMonRepository.findById(maLoai)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy loại món"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Không tìm thấy loại món"));
     }
 
     private boolean coDieuKienLoc(
@@ -176,6 +225,7 @@ public class MonAnService {
             BigDecimal giaTu,
             BigDecimal giaDen,
             String trangThai) {
+
         return (keyword != null && !keyword.isBlank())
                 || maLoai != null
                 || giaTu != null

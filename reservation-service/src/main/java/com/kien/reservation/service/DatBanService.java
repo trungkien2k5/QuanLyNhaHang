@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
@@ -121,6 +122,10 @@ public class DatBanService {
             String sort,
             String direction) {
 
+        // =========================
+        // XỬ LÝ SORT
+        // =========================
+
         // Giá trị mặc định
         if (sort == null || sort.isBlank()) {
             sort = "maDatBan";
@@ -130,6 +135,33 @@ public class DatBanService {
             direction = "asc";
         }
 
+        // Chỉ cho phép sort theo các field được whitelist
+        Set<String> truongDuocSapXep = Set.of(
+                "maDatBan",
+                "ngayDat",
+                "gioBatDau",
+                "gioKetThuc",
+                "soNguoi",
+                "trangThai"
+        );
+
+        // Kiểm tra field sort
+        if (!truongDuocSapXep.contains(sort)) {
+            throw new BadRequestException(
+                    "Không được sắp xếp theo trường: " + sort
+            );
+        }
+
+        // Chỉ cho phép asc hoặc desc
+        if (!direction.equalsIgnoreCase("asc")
+                && !direction.equalsIgnoreCase("desc")) {
+
+            throw new BadRequestException(
+                    "Chiều sắp xếp phải là asc hoặc desc"
+            );
+        }
+
+        // Tạo Sort sau khi đã whitelist
         Sort sapXep = direction.equalsIgnoreCase("desc")
                 ? Sort.by(sort).descending()
                 : Sort.by(sort).ascending();
@@ -140,6 +172,10 @@ public class DatBanService {
                 sapXep
         );
 
+        // =========================
+        // FILTER THEO KHU VỰC
+        // =========================
+
         // Nếu lọc theo khu vực
         // thì lấy danh sách mã bàn từ Restaurant Service
         List<Integer> maBansTheoKhuVuc = null;
@@ -149,7 +185,10 @@ public class DatBanService {
                     restaurantClient.layMaBanTheoKhuVuc(maKhuVuc);
         }
 
-        // Build Specification để filter
+        // =========================
+        // BUILD SPECIFICATION
+        // =========================
+
         Specification<DatBan> specification =
                 DatBanSpecificationBuilder.build(
                         ngay,
