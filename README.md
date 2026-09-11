@@ -110,7 +110,7 @@ Cách tổ chức này giúp giảm coupling và đảm bảo mỗi service sở
 | **Resilience4j** | Retry, Timeout, Circuit Breaker |
 | **Swagger / OpenAPI** | Tài liệu và kiểm thử API |
 | **Actuator** | Health check và metrics |
-| **Docker Compose** | Chạy infrastructure và các service |
+| **Docker Compose** | Chạy infrastructure |
 | **Maven** | Build và quản lý dependency |
 
 ---
@@ -124,7 +124,6 @@ Cài đặt:
 - Java 17
 - Maven
 - Docker Desktop
-- SQL Server
 - Git
 
 Kiểm tra Java:
@@ -146,32 +145,13 @@ git clone https://github.com/trungkien2k5/QuanLyNhaHang.git
 cd QuanLyNhaHang
 ```
 
-### 3.3. Chuẩn bị SQL Server
-
-Project hiện sử dụng SQL Server chạy bên ngoài Docker.
-
-Tạo các database:
-
-```sql
-CREATE DATABASE restaurant_auth;
-CREATE DATABASE restaurant_db;
-CREATE DATABASE restaurant_reservation;
-CREATE DATABASE restaurant_payment;
-```
-
-Đảm bảo SQL Server đang chạy tại:
-
-```text
-localhost:1433
-```
-
-### 3.4. Cấu hình Environment Variables
+### 3.3. Chuẩn bị Environment Variables
 
 Thiết lập các biến môi trường trước khi chạy project.
 
 ```text
-DB_USERNAME=your_sqlserver_username
-DB_PASSWORD=your_sqlserver_password
+DB_USERNAME=sa
+DB_PASSWORD=your_strong_password
 JWT_SECRET=your_jwt_secret
 MAIL_USERNAME=your_email@gmail.com
 MAIL_PASSWORD=your_gmail_app_password
@@ -180,17 +160,34 @@ REDIS_PORT=6379
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 ```
 
-Chi tiết xem phần [Environment Variables](#-5-environment-variables).
+> `DB_PASSWORD` phải đáp ứng chính sách mật khẩu của SQL Server.
 
-### 3.5. Khởi động bằng Docker Compose
+### 3.4. Khởi động Infrastructure bằng Docker
 
-Build và khởi động toàn bộ service:
+Docker Compose chỉ chạy **Infrastructure**, còn các Spring Boot service chạy trực tiếp bằng IntelliJ:
 
-```bash
-docker compose up -d --build
+```text
+Docker Desktop
+├── SQL Server :1433
+├── Redis :6379
+└── Kafka :9092
+
+IntelliJ
+├── discovery-service :8761
+├── auth-service :8081
+├── restaurant-service :8082
+├── reservation-service :8083
+├── payment-service :8084
+└── api-gateway :8080
 ```
 
-Kiểm tra container:
+Khởi động:
+
+```bash
+docker compose up -d
+```
+
+Kiểm tra:
 
 ```bash
 docker compose ps
@@ -202,29 +199,37 @@ Xem log:
 docker compose logs -f
 ```
 
-Dừng hệ thống:
+Dừng infrastructure:
 
 ```bash
 docker compose down
 ```
 
-### 3.6. Thứ tự khởi động
-
-Hệ thống gồm các thành phần chính:
+SQL Server tự tạo các database:
 
 ```text
-SQL Server
-   ↓
-Discovery Service
-   ↓
-Redis + Kafka
-   ↓
-Auth / Restaurant / Reservation / Payment
-   ↓
-API Gateway
+restaurant_auth
+restaurant_db
+restaurant_reservation
+restaurant_payment
 ```
 
-Docker Compose đã khai báo dependency giữa các container. Tuy nhiên, SQL Server cần được chạy sẵn trên máy host vì SQL Server không nằm trong `docker-compose.yml`.
+script khởi tạo nằm tại `db/init.sql`.
+
+### 3.5. Chạy Spring Boot bằng IntelliJ
+
+Chạy theo thứ tự:
+
+```text
+1. discovery-service
+2. auth-service
+3. restaurant-service
+4. reservation-service
+5. payment-service
+6. api-gateway
+```
+
+Khi sửa code Java, chỉ cần **Restart service trong IntelliJ**. Không cần build lại Docker image.
 
 ---
 
@@ -257,102 +262,20 @@ http://localhost:8082/actuator/metrics
 http://localhost:8082/actuator/prometheus
 ```
 
-### Luồng test Authentication
-
-```text
-1. Register
-   ↓
-2. Login
-   ↓
-3. Nhận Access Token
-   ↓
-4. Mở Swagger
-   ↓
-5. Chọn Authorize
-   ↓
-6. Nhập: Bearer <ACCESS_TOKEN>
-   ↓
-7. Gọi các API yêu cầu authentication
-```
-
-### Một số API chính
-
-#### Auth Service
-
-```http
-POST /auth/register
-POST /auth/login
-POST /auth/refresh
-POST /auth/logout
-PUT  /auth/change-password
-```
-
-#### Restaurant Service
-
-```http
-GET    /monan
-POST   /monan
-PUT    /monan/{id}
-DELETE /monan/{id}
-
-GET    /ban
-GET    /khuvuc
-GET    /loaimon
-```
-
-#### Reservation Service
-
-```http
-POST /datban
-GET  /datban
-GET  /datban/{id}
-PUT  /datban/{id}/cancel
-```
-
-#### Payment Service
-
-```http
-GET  /hoadon
-POST /hoadon
-PUT  /hoadon/{id}/thanhtoan
-
-CRUD /chitiethoadon
-CRUD /giaodich
-```
-
 ---
 
 ##  5. Environment Variables
 
-Project sử dụng Environment Variables cho các thông tin cấu hình và thông tin nhạy cảm.
-
 | Biến | Bắt buộc | Mục đích |
 |---|:---:|---|
-| `DB_USERNAME` | ✅ | Username SQL Server |
-| `DB_PASSWORD` | ✅ | Password SQL Server |
+| `DB_USERNAME` | ✅ | Username SQL Server, thông thường là `sa` |
+| `DB_PASSWORD` | ✅ | Password SQL Server và password của container SQL Server |
 | `JWT_SECRET` | ✅ | Secret dùng để ký JWT |
 | `MAIL_USERNAME` | ✅ | Email gửi OTP/thông báo |
 | `MAIL_PASSWORD` | ✅ | App Password của email |
 | `REDIS_HOST` | ⭕ | Host Redis, mặc định `localhost` |
 | `REDIS_PORT` | ⭕ | Port Redis, mặc định `6379` |
 | `KAFKA_BOOTSTRAP_SERVERS` | ⭕ | Kafka server, mặc định `localhost:9092` |
-
-### Ví dụ cấu hình
-
-```env
-DB_USERNAME=sa
-DB_PASSWORD=your_password
-
-JWT_SECRET=your_long_random_secret
-
-MAIL_USERNAME=your_email@gmail.com
-MAIL_PASSWORD=your_gmail_app_password
-
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-```
 
 > Không commit password, JWT secret hoặc thông tin email thật lên GitHub.
 
@@ -368,13 +291,13 @@ QuanLyNhaHang/
 ├── restaurant-service/
 ├── reservation-service/
 ├── payment-service/
+├── db/
+│   └── init.sql
 ├── docker-compose.yml
 ├── CONVENTION.md
 ├── WORKFLOW.md
 └── README.md
 ```
-
-Mỗi service được tổ chức độc lập và có `pom.xml`, Dockerfile và source code riêng.
 
 ---
 
@@ -389,8 +312,6 @@ Hệ thống sử dụng:
 - `@PreAuthorize` cho phân quyền endpoint
 - OTP qua email
 
-API Gateway sử dụng JWT Secret để kiểm tra token trước khi request đi tới các service phía sau.
-
 ---
 
 ##  8. Caching & Event-driven
@@ -399,18 +320,9 @@ API Gateway sử dụng JWT Secret để kiểm tra token trước khi request �
 
 Restaurant Service sử dụng Redis làm cache với TTL mặc định **10 phút**.
 
-Cache được sử dụng nhằm giảm số lần truy vấn database đối với dữ liệu được truy cập thường xuyên. Khi dữ liệu thay đổi, cache eviction được sử dụng để tránh trả về dữ liệu cũ.
-
 ### Kafka
 
 Kafka được sử dụng cho xử lý event bất đồng bộ.
-
-Lợi ích chính:
-
-- Giảm coupling giữa các service
-- Không cần service gọi phải chờ toàn bộ xử lý phía service nhận
-- Hỗ trợ xử lý event và retry
-- Tăng khả năng mở rộng hệ thống
 
 Kafka trong project chạy theo mô hình **KRaft**, không cần Zookeeper.
 
@@ -425,25 +337,11 @@ Restaurant Service cấu hình Resilience4j cho Kafka Publisher:
 - **Circuit Breaker**: mở khi tỷ lệ lỗi đạt ngưỡng 50%
 - **Wait duration** khi Circuit Breaker mở: 10 giây
 
-Mục tiêu là tránh việc một dependency lỗi kéo theo việc toàn bộ request bị treo hoặc lan truyền lỗi sang các thành phần khác.
-
 ---
 
 ##  10. Monitoring
 
-Spring Boot Actuator được sử dụng để cung cấp:
-
-- Health check
-- Metrics
-- Prometheus endpoint
-
-Ví dụ:
-
-```text
-/actuator/health
-/actuator/metrics
-/actuator/prometheus
-```
+Spring Boot Actuator được sử dụng để cung cấp health check, metrics và Prometheus endpoint.
 
 ---
 
@@ -451,26 +349,22 @@ Ví dụ:
 
 `docker-compose.yml` cung cấp:
 
-- Discovery Service
-- API Gateway
-- Auth Service
-- Restaurant Service
-- Reservation Service
-- Payment Service
+- SQL Server 2022 Developer
 - Redis 7
 - Apache Kafka 4.0
 
-SQL Server hiện chạy trên host machine và được các container kết nối thông qua `host.docker.internal`.
+Các Spring Boot service không còn chạy trong Docker Compose; chúng chạy trực tiếp bằng IntelliJ để việc sửa code và restart service nhanh hơn.
+
+SQL Server dùng volume `sqlserver-data`, Redis dùng `redis-data` để giữ dữ liệu khi container được recreate.
 
 ---
 
 ##  12. Lưu ý
 
-- Cần khởi động SQL Server trước khi chạy các service.
-- Các database phải tồn tại đúng tên cấu hình.
-- `DB_USERNAME`, `DB_PASSWORD` và `JWT_SECRET` phải được cấu hình trước khi chạy Docker Compose.
-- Email cần sử dụng App Password nếu bật xác thực 2 bước trên Gmail.
+- Cấu hình `DB_PASSWORD` giống nhau cho Docker SQL Server và biến môi trường của các Spring Boot service.
+- SQL Server được expose tại `localhost:1433` nên các service chạy bằng IntelliJ vẫn kết nối qua `localhost`.
 - Không commit các secret vào repository.
+- Nếu đã có dữ liệu trong SQL Server cài trên Windows trước đây, dữ liệu đó **không tự động được migrate** sang volume Docker mới; cần backup/restore nếu muốn giữ dữ liệu cũ.
 
 ---
 
