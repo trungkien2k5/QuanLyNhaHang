@@ -1,11 +1,5 @@
 services:
 
-  discovery-service:
-    build: ./discovery-service
-    container_name: discovery-service
-    ports:
-      - "8761:8761"
-
   redis:
     image: redis:7-alpine
     container_name: quanlynhahang-redis
@@ -24,7 +18,7 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
@@ -33,83 +27,6 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
-
-  auth-service:
-    build: ./auth-service
-    container_name: auth-service
-    ports:
-      - "8081:8081"
-    depends_on:
-      - discovery-service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1433;databaseName=restaurant_auth;encrypt=true;trustServerCertificate=true
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
-
-  restaurant-service:
-    build: ./restaurant-service
-    container_name: restaurant-service
-    ports:
-      - "8082:8082"
-    depends_on:
-      - discovery-service
-      - redis
-      - kafka
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1433;databaseName=restaurant_db;encrypt=true;trustServerCertificate=true
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-
-  reservation-service:
-    build: ./reservation-service
-    container_name: reservation-service
-    ports:
-      - "8083:8083"
-    depends_on:
-      - discovery-service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1433;databaseName=restaurant_reservation;encrypt=true;trustServerCertificate=true
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
-
-  payment-service:
-    build: ./payment-service
-    container_name: payment-service
-    ports:
-      - "8084:8084"
-    depends_on:
-      - discovery-service
-      - restaurant-service
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1433;databaseName=restaurant_payment;encrypt=true;trustServerCertificate=true
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
-
-  api-gateway:
-    build: ./api-gateway
-    container_name: api-gateway
-    ports:
-      - "8080:8080"
-    depends_on:
-      - discovery-service
-      - auth-service
-      - restaurant-service
-      - reservation-service
-      - payment-service
-    environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-      JWT_SECRET: ${JWT_SECRET}
 
 volumes:
   redis-data:
