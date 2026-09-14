@@ -1,19 +1,18 @@
 package com.kien.auth.controller;
 
-import com.kien.auth.service.AuthService;
+import com.kien.auth.common.ApiResponse;
+import com.kien.auth.dto.reponse.LoginResponse;
 import com.kien.auth.dto.reponse.MeResponse;
 import com.kien.auth.dto.reponse.RefreshTokenResponse;
 import com.kien.auth.dto.request.*;
-import com.kien.auth.entity.NguoiDung;
+import com.kien.auth.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import com.kien.auth.common.ApiResponse;
-import com.kien.auth.dto.reponse.LoginResponse;
-import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.security.core.Authentication;
-import jakarta.validation.Valid;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -25,11 +24,10 @@ public class AuthController {
 
     private final AuthService authService;
 
-
     @Operation(summary = "Đăng nhập và nhận token")
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(
-            @Valid @RequestBody LoginRequest request) {
+            @RequestBody LoginRequest request) {
 
         return ApiResponse.<LoginResponse>builder()
                 .success(true)
@@ -69,6 +67,7 @@ public class AuthController {
                 .data("OK")
                 .build();
     }
+
     @Operation(summary = "Làm mới Access Token")
     @PostMapping("/refresh")
     public ApiResponse<RefreshTokenResponse> refresh(
@@ -85,8 +84,11 @@ public class AuthController {
     @PostMapping("/logout")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<String> logout(
-            Authentication authentication,
             @RequestBody RefreshTokenRequest request) {
+
+        Authentication authentication = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
 
         authService.logout(
                 authentication.getName(),
@@ -99,6 +101,7 @@ public class AuthController {
                 .data("OK")
                 .build();
     }
+
     @Operation(summary = "Quên mật khẩu")
     @PostMapping("/forgot-password")
     public ApiResponse<String> forgotPassword(
@@ -130,7 +133,7 @@ public class AuthController {
     @Operation(summary = "Đăng ký tài khoản")
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Void>> register(
-            @Valid @RequestBody RegisterRequest request) {
+            @RequestBody RegisterRequest request) {
 
         authService.register(request);
 
@@ -148,7 +151,7 @@ public class AuthController {
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<Void>> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UpdateProfileRequest request) {
+            @RequestBody UpdateProfileRequest request) {
 
         authService.updateProfile(
                 userDetails.getUsername(),
