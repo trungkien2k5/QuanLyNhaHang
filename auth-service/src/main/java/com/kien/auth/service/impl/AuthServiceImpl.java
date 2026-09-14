@@ -179,7 +179,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(RefreshTokenRequest request) {
+    public void logout(
+            String username,
+            RefreshTokenRequest request
+    ) {
 
         RefreshToken refreshToken = refreshTokenRepository
                 .findByToken(request.getRefreshToken())
@@ -188,11 +191,19 @@ public class AuthServiceImpl implements AuthService {
                                 "Refresh Token không tồn tại"
                         ));
 
+        if (!refreshToken.getNguoiDung()
+                .getTenDangNhap()
+                .equals(username)) {
+
+            throw new BadRequestException(
+                    "Refresh Token không thuộc tài khoản hiện tại"
+            );
+        }
+
         refreshToken.setRevoked(true);
 
         refreshTokenRepository.save(refreshToken);
     }
-
     private String generateOtp() {
 
         return String.valueOf(

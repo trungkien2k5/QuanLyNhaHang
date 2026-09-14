@@ -13,7 +13,9 @@ import org.springframework.security.core.Authentication;
 import com.kien.auth.common.ApiResponse;
 import com.kien.auth.dto.reponse.LoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -82,12 +84,17 @@ public class AuthController {
     }
 
     @Operation(summary = "Đăng xuất")
-    @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<String> logout(
             @RequestBody RefreshTokenRequest request) {
 
-        authService.logout(request);
+        String username = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        authService.logout(username, request);
 
         return ApiResponse.<String>builder()
                 .success(true)
@@ -95,7 +102,6 @@ public class AuthController {
                 .data("OK")
                 .build();
     }
-
     @Operation(summary = "Quên mật khẩu")
     @PostMapping("/forgot-password")
     public ApiResponse<String> forgotPassword(

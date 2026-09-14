@@ -21,15 +21,23 @@ import org.springframework.test.context.TestPropertySource;
 import com.kien.auth.security.CustomUserDetailsService;
 import com.kien.auth.security.JwtService;
 import com.kien.auth.security.JwtFilter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.util.List;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import static org.mockito.ArgumentMatchers.eq;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(properties = {
@@ -141,25 +149,35 @@ class AuthControllerTest {
     }
 
 
-
     @Test
     void logout_success() throws Exception {
+
         RefreshTokenRequest request = new RefreshTokenRequest();
         request.setRefreshToken("refresh-token");
 
-        mockMvc.perform(
-                        post("/auth/logout")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request))
-                )
+        Authentication auth =
+                new UsernamePasswordAuthenticationToken(
+                        "kien",
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                );
+
+        doNothing().when(authService).logout(
+                eq("kien"),
+                any(RefreshTokenRequest.class)
+        );
+
+        mockMvc.perform(post("/auth/logout")
+                        .with(authentication(auth))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(authService)
-                .logout(any(RefreshTokenRequest.class));
+        verify(authService).logout(
+                eq("kien"),
+                any(RefreshTokenRequest.class)
+        );
     }
-
-
-
     @Test
     void forgotPassword_success() throws Exception {
         ForgotPasswordRequest request = new ForgotPasswordRequest();

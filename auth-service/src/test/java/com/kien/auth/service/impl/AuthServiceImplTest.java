@@ -12,6 +12,7 @@ import com.kien.auth.entity.NguoiDung;
 import com.kien.auth.entity.Otp;
 import com.kien.auth.entity.RefreshToken;
 import com.kien.auth.exception.BadRequestException;
+import com.kien.auth.exception.ResourceNotFoundException;
 import com.kien.auth.mail.service.MailService;
 import com.kien.auth.repository.NguoiDungRepository;
 import com.kien.auth.repository.OtpRepository;
@@ -19,7 +20,6 @@ import com.kien.auth.repository.RefreshTokenRepository;
 import com.kien.auth.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.kien.auth.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -27,7 +27,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -80,6 +85,7 @@ class AuthServiceImplTest {
 
     @Test
     void register_success() {
+
         when(nguoiDungRepository.existsByTenDangNhap("kien"))
                 .thenReturn(false);
 
@@ -106,6 +112,7 @@ class AuthServiceImplTest {
 
     @Test
     void register_duplicateUsername() {
+
         when(nguoiDungRepository.existsByTenDangNhap("kien"))
                 .thenReturn(true);
 
@@ -127,6 +134,7 @@ class AuthServiceImplTest {
 
     @Test
     void login_success() {
+
         LoginRequest request = new LoginRequest();
         request.setTenDangNhap("kien");
         request.setMatKhau("123456");
@@ -137,7 +145,7 @@ class AuthServiceImplTest {
         nguoiDung.setVaiTro("CUSTOMER");
 
         when(nguoiDungRepository.findByTenDangNhap("kien"))
-                .thenReturn(java.util.Optional.of(nguoiDung));
+                .thenReturn(Optional.of(nguoiDung));
 
         when(jwtService.taoToken("kien", "CUSTOMER"))
                 .thenReturn("access-token");
@@ -148,7 +156,9 @@ class AuthServiceImplTest {
         authService.login(request);
 
         verify(authenticationManager)
-                .authenticate(any(UsernamePasswordAuthenticationToken.class));
+                .authenticate(
+                        any(UsernamePasswordAuthenticationToken.class)
+                );
 
         verify(nguoiDungRepository)
                 .findByTenDangNhap("kien");
@@ -165,12 +175,13 @@ class AuthServiceImplTest {
 
     @Test
     void login_userNotFound() {
+
         LoginRequest request = new LoginRequest();
         request.setTenDangNhap("kien");
         request.setMatKhau("123456");
 
         when(nguoiDungRepository.findByTenDangNhap("kien"))
-                .thenReturn(java.util.Optional.empty());
+                .thenReturn(Optional.empty());
 
         assertThrows(
                 ResourceNotFoundException.class,
@@ -188,6 +199,7 @@ class AuthServiceImplTest {
 
     @Test
     void changePassword_success() {
+
         ChangePasswordRequest request = new ChangePasswordRequest();
         request.setOldPassword("123456");
         request.setNewPassword("newPassword123");
@@ -197,7 +209,7 @@ class AuthServiceImplTest {
         nguoiDung.setMatKhau("encoded-old-password");
 
         when(nguoiDungRepository.findByTenDangNhap("kien"))
-                .thenReturn(java.util.Optional.of(nguoiDung));
+                .thenReturn(Optional.of(nguoiDung));
 
         when(passwordEncoder.matches(
                 "123456",
@@ -226,6 +238,7 @@ class AuthServiceImplTest {
 
     @Test
     void changePassword_oldPasswordIncorrect() {
+
         ChangePasswordRequest request = new ChangePasswordRequest();
         request.setOldPassword("wrong-password");
         request.setNewPassword("newPassword123");
@@ -235,7 +248,7 @@ class AuthServiceImplTest {
         nguoiDung.setMatKhau("encoded-old-password");
 
         when(nguoiDungRepository.findByTenDangNhap("kien"))
-                .thenReturn(java.util.Optional.of(nguoiDung));
+                .thenReturn(Optional.of(nguoiDung));
 
         when(passwordEncoder.matches(
                 "wrong-password",
@@ -263,6 +276,7 @@ class AuthServiceImplTest {
 
     @Test
     void refreshToken_success() {
+
         RefreshTokenRequest request = new RefreshTokenRequest();
         request.setRefreshToken("refresh-token");
 
@@ -275,11 +289,11 @@ class AuthServiceImplTest {
         token.setNguoiDung(nguoiDung);
         token.setRevoked(false);
         token.setExpiredAt(
-                java.time.LocalDateTime.now().plusDays(1)
+                LocalDateTime.now().plusDays(1)
         );
 
         when(refreshTokenRepository.findByToken("refresh-token"))
-                .thenReturn(java.util.Optional.of(token));
+                .thenReturn(Optional.of(token));
 
         when(jwtService.taoToken("kien", "CUSTOMER"))
                 .thenReturn("new-access-token");
@@ -301,18 +315,23 @@ class AuthServiceImplTest {
     // ==================== LOGOUT ====================
 
     @Test
-    void logout_success() {
+    void logout_ownerToken_success() {
+
         RefreshTokenRequest request = new RefreshTokenRequest();
-        request.setRefreshToken("refresh-token");
+        request.setRefreshToken("token123");
+
+        NguoiDung owner = new NguoiDung();
+        owner.setTenDangNhap("userA");
 
         RefreshToken token = new RefreshToken();
-        token.setToken("refresh-token");
+        token.setToken("token123");
+        token.setNguoiDung(owner);
         token.setRevoked(false);
 
-        when(refreshTokenRepository.findByToken("refresh-token"))
-                .thenReturn(java.util.Optional.of(token));
+        when(refreshTokenRepository.findByToken("token123"))
+                .thenReturn(Optional.of(token));
 
-        authService.logout(request);
+        authService.logout("userA", request);
 
         assertTrue(token.getRevoked());
 
@@ -320,10 +339,59 @@ class AuthServiceImplTest {
                 .save(token);
     }
 
+    @Test
+    void logout_tokenBelongsToAnotherUser_throwException() {
+
+        RefreshTokenRequest request = new RefreshTokenRequest();
+        request.setRefreshToken("token123");
+
+        NguoiDung owner = new NguoiDung();
+        owner.setTenDangNhap("userA");
+
+        RefreshToken token = new RefreshToken();
+        token.setToken("token123");
+        token.setNguoiDung(owner);
+        token.setRevoked(false);
+
+        when(refreshTokenRepository.findByToken("token123"))
+                .thenReturn(Optional.of(token));
+
+        assertThrows(
+                BadRequestException.class,
+                () -> authService.logout("userB", request)
+        );
+
+        // User B không được revoke token của User A
+        assertFalse(token.getRevoked());
+
+        // Không được lưu thay đổi
+        verify(refreshTokenRepository, never())
+                .save(any());
+    }
+
+    @Test
+    void logout_tokenNotFound_throwException() {
+
+        RefreshTokenRequest request = new RefreshTokenRequest();
+        request.setRefreshToken("invalid");
+
+        when(refreshTokenRepository.findByToken("invalid"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> authService.logout("kien", request)
+        );
+
+        verify(refreshTokenRepository, never())
+                .save(any());
+    }
+
     // ==================== FORGOT / RESET PASSWORD ====================
 
     @Test
     void forgotPassword_success() {
+
         ForgotPasswordRequest request = new ForgotPasswordRequest();
         request.setEmail("kien@gmail.com");
 
@@ -331,7 +399,7 @@ class AuthServiceImplTest {
         nguoiDung.setEmail("kien@gmail.com");
 
         when(nguoiDungRepository.findByEmail("kien@gmail.com"))
-                .thenReturn(java.util.Optional.of(nguoiDung));
+                .thenReturn(Optional.of(nguoiDung));
 
         authService.forgotPassword(request);
 
@@ -344,6 +412,7 @@ class AuthServiceImplTest {
 
     @Test
     void resetPassword_success() {
+
         ResetPasswordRequest request = new ResetPasswordRequest();
         request.setEmail("kien@gmail.com");
         request.setOtp("123456");
@@ -354,7 +423,7 @@ class AuthServiceImplTest {
         otp.setOtp("123456");
         otp.setUsed(false);
         otp.setExpiredAt(
-                java.time.LocalDateTime.now().plusMinutes(5)
+                LocalDateTime.now().plusMinutes(5)
         );
 
         NguoiDung nguoiDung = new NguoiDung();
@@ -362,10 +431,10 @@ class AuthServiceImplTest {
         nguoiDung.setMatKhau("old-password");
 
         when(otpRepository.findTopByEmailOrderByIdDesc("kien@gmail.com"))
-                .thenReturn(java.util.Optional.of(otp));
+                .thenReturn(Optional.of(otp));
 
         when(nguoiDungRepository.findByEmail("kien@gmail.com"))
-                .thenReturn(java.util.Optional.of(nguoiDung));
+                .thenReturn(Optional.of(nguoiDung));
 
         when(passwordEncoder.encode("newPassword123"))
                 .thenReturn("encoded-new-password");
@@ -389,4 +458,3 @@ class AuthServiceImplTest {
                 .save(otp);
     }
 }
-
