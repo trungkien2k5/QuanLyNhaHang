@@ -9,13 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import com.kien.auth.common.ApiResponse;
 import com.kien.auth.dto.reponse.LoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -87,14 +85,13 @@ public class AuthController {
     @PostMapping("/logout")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<String> logout(
+            Authentication authentication,
             @RequestBody RefreshTokenRequest request) {
 
-        String username = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-
-        authService.logout(username, request);
+        authService.logout(
+                authentication.getName(),
+                request
+        );
 
         return ApiResponse.<String>builder()
                 .success(true)

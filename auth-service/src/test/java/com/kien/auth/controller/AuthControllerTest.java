@@ -6,8 +6,10 @@ import com.kien.auth.dto.reponse.RefreshTokenResponse;
 import com.kien.auth.dto.request.ForgotPasswordRequest;
 import com.kien.auth.dto.request.LoginRequest;
 import com.kien.auth.dto.request.RefreshTokenRequest;
+import org.springframework.security.core.context.SecurityContextHolder;
 import com.kien.auth.dto.request.RegisterRequest;
 import com.kien.auth.dto.request.UpdateProfileRequest;
+import org.springframework.security.test.context.support.WithMockUser;
 import com.kien.auth.service.AuthService;
 import com.kien.auth.repository.NguoiDungRepository;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(properties = {
@@ -150,17 +153,11 @@ class AuthControllerTest {
 
 
     @Test
+    @WithMockUser(username = "kien", roles = "USER")
     void logout_success() throws Exception {
 
         RefreshTokenRequest request = new RefreshTokenRequest();
         request.setRefreshToken("refresh-token");
-
-        Authentication auth =
-                new UsernamePasswordAuthenticationToken(
-                        "kien",
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_USER"))
-                );
 
         doNothing().when(authService).logout(
                 eq("kien"),
@@ -168,7 +165,7 @@ class AuthControllerTest {
         );
 
         mockMvc.perform(post("/auth/logout")
-                        .with(authentication(auth))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
