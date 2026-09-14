@@ -16,7 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
+import jakarta.validation.Valid;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/auth")
@@ -27,7 +27,7 @@ public class AuthController {
     @Operation(summary = "Đăng nhập và nhận token")
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(
-            @RequestBody LoginRequest request) {
+            @Valid @RequestBody LoginRequest request) {
 
         return ApiResponse.<LoginResponse>builder()
                 .success(true)
