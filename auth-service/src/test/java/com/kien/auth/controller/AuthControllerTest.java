@@ -6,12 +6,11 @@ import com.kien.auth.dto.reponse.RefreshTokenResponse;
 import com.kien.auth.dto.request.ForgotPasswordRequest;
 import com.kien.auth.dto.request.LoginRequest;
 import com.kien.auth.dto.request.RefreshTokenRequest;
-import org.springframework.security.core.context.SecurityContextHolder;
 import com.kien.auth.dto.request.RegisterRequest;
-import com.kien.auth.dto.request.UpdateProfileRequest;
-import org.springframework.security.test.context.support.WithMockUser;
 import com.kien.auth.service.AuthService;
 import com.kien.auth.repository.NguoiDungRepository;
+import com.kien.auth.security.CustomUserDetailsService;
+import com.kien.auth.security.JwtFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -20,33 +19,21 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.TestPropertySource;
-import com.kien.auth.security.CustomUserDetailsService;
-import com.kien.auth.security.JwtService;
-import com.kien.auth.security.JwtFilter;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import java.util.List;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.security.test.context.support.WithMockUser;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 @WebMvcTest(AuthController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(properties = {
         "JWT_SECRET=test-secret-key-for-unit-test-123456789"
 })
-
 class AuthControllerTest {
 
     @Autowired
@@ -56,15 +43,17 @@ class AuthControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-     AuthService authService;
+    AuthService authService;
 
     @MockitoBean
-     NguoiDungRepository nguoiDungRepository;
+    NguoiDungRepository nguoiDungRepository;
 
     @MockitoBean
-     PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
+
     @MockitoBean
     JwtFilter jwtFilter;
+
     @MockitoBean
     CustomUserDetailsService customUserDetailsService;
 
@@ -106,7 +95,6 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-
     @Test
     void register_success() throws Exception {
         RegisterRequest request = new RegisterRequest();
@@ -125,23 +113,18 @@ class AuthControllerTest {
         verify(authService).register(any(RegisterRequest.class));
     }
 
-
-
     @Test
     void refresh_success() throws Exception {
-
-        RefreshTokenResponse response =
-                new RefreshTokenResponse(
-                        "access-token-test",
-                        "refresh-token-test"
-                );
+        RefreshTokenResponse response = new RefreshTokenResponse(
+                "access-token-test",
+                "refresh-token-test"
+        );
 
         when(authService.refreshToken(any(RefreshTokenRequest.class)))
                 .thenReturn(response);
 
         mockMvc.perform(
                 post("/auth/refresh")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {
@@ -149,13 +132,13 @@ class AuthControllerTest {
                             }
                             """)
         ).andExpect(status().isOk());
-    }
 
+        verify(authService).refreshToken(any(RefreshTokenRequest.class));
+    }
 
     @Test
     @WithMockUser(username = "kien", roles = "USER")
     void logout_success() throws Exception {
-
         RefreshTokenRequest request = new RefreshTokenRequest();
         request.setRefreshToken("refresh-token");
 
@@ -164,10 +147,12 @@ class AuthControllerTest {
                 any(RefreshTokenRequest.class)
         );
 
-        mockMvc.perform(post("/auth/logout")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(
+                        post("/auth/logout")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                )
                 .andExpect(status().isOk());
 
         verify(authService).logout(
@@ -175,6 +160,7 @@ class AuthControllerTest {
                 any(RefreshTokenRequest.class)
         );
     }
+
     @Test
     void forgotPassword_success() throws Exception {
         ForgotPasswordRequest request = new ForgotPasswordRequest();
